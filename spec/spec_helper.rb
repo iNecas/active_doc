@@ -1,0 +1,1 @@
+require File.expand_path("../../lib/active_doc.rb", __FILE__)
