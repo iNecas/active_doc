@@ -12,19 +12,20 @@ module ActiveDoc
     def validate(base, method_name)
       if @validators
         used_validators = @validators
-        @validators = nil
-        used_validators.each { |validator| validator.validate(base, base.instance_method(method_name)) }
+        @validators     = nil
+        before_method(base, method_name, nil) do
+          used_validators.each { |validator| validator.validate(base, base.instance_method(method_name)) }
+        end
       end
     end
 
-    def before_method(base, method, validator)
+    def before_method(base, method_name, validator)
       base.class_eval do
-        self.send(:define_method, "#{method.name}_with_validation") do |*args|
-          yield args
-          self.send("#{method}_without_validation", *args)
+        self.send(:define_method, "#{method_name}_with_validation") do |*args|
+          self.send("#{method_name}_without_validation", *args)
         end
-        self.send(:alias_method, :"#{method.name}_without_validation", method.name)
-        self.send(:alias_method, method.name, :"#{method.name}_with_validation")
+        self.send(:alias_method, :"#{method_name}_without_validation", method_name)
+        self.send(:alias_method, method_name, :"#{method_name}_with_validation")
       end
     end
 
@@ -37,4 +38,3 @@ module ActiveDoc
   end
 end
 require 'active_doc/methods_doc'
-

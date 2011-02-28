@@ -25,7 +25,7 @@ describe ActiveDoc::MethodsDoc do
       
       context "with correct type" do
         it "does not raise ArgumentError" do
-          lambda { subject.say_hello_to("Ivan") }.should_not raise_error ArgumentError
+          lambda { subject.say_hello_to("Ivan", "Necas") }.should_not raise_error ArgumentError
         end
       end
       
