@@ -5,9 +5,10 @@ describe ActiveDoc::MethodsDoc do
     class ClassWithMethodValidation
       include ActiveDoc
       
-      describe_arg :name, String
-      def say_hello_to(name)
-        return "Hello #{name}"
+      describe_arg :first_name, String
+      describe_arg :last_name, String
+      def say_hello_to(first_name, last_name)
+        return "Hello #{first_name} #{last_name}"
       end
       
       def say_hello_to_any_name(name)
