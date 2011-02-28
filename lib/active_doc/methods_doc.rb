@@ -9,7 +9,7 @@ module ActiveDoc
       def validate(receiver, method)
         argument_name = @name
         expected_type = @type
-        described_argument_index = method.parameters.find_index { |(arg, name)| name == @name }
+        described_argument_index = method.parameters.find_index { |(arg, name)| name == argument_name }
         if described_argument_index
           ActiveDoc.before_method(receiver, method, self) do |args|
             current_value = args[described_argument_index]
