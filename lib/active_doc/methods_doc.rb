@@ -19,9 +19,13 @@ module ActiveDoc
           raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{argument_name}' of type #{expected_type}")
         end
       end
+      
+      def to_rdoc
+        "@#{@name} :: (#{@type})"
+      end
     end
     
-    module ClassMethods
+    module Dsl
       def describe_arg(name, type)
         ActiveDoc.register_validator(ActiveDoc::MethodsDoc::Validator.new(name, type))
       end
@@ -29,4 +33,4 @@ module ActiveDoc
     
   end
 end
-ActiveDoc::ClassMethods.send(:include, ActiveDoc::MethodsDoc::ClassMethods)
+ActiveDoc::Dsl.send(:include, ActiveDoc::MethodsDoc::Dsl)
