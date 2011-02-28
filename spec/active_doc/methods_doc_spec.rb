@@ -3,10 +3,14 @@ require 'spec_helper'
 describe ActiveDoc::MethodsDoc do
   describe "arguments validation" do
     class ClassWithMethodValidation
-      include ActiveDoc::MethodsDoc
+      include ActiveDoc
       
       describe_arg :name, String
       def say_hello_to(name)
+        return "Hello #{name}"
+      end
+      
+      def say_hello_to_any_name(name)
         return "Hello #{name}"
       end
     end
@@ -21,6 +25,12 @@ describe ActiveDoc::MethodsDoc do
       context "with correct type" do
         it "does not raise ArgumentError" do
           lambda { subject.say_hello_to("Ivan") }.should_not raise_error ArgumentError
+        end
+      end
+      
+      context "without argument validation" do
+        it "does not raise ArgumentError" do
+          lambda { subject.say_hello_to_any_name(0) }.should_not raise_error ArgumentError
         end
       end
     end
