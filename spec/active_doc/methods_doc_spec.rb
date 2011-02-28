@@ -7,7 +7,6 @@ describe ActiveDoc::MethodsDoc do
 
       describe_arg :first_name, String
       describe_arg :last_name, String
-
       def say_hello_to(first_name, last_name)
         return "Hello #{first_name} #{last_name}"
       end
@@ -34,7 +33,7 @@ describe ActiveDoc::MethodsDoc do
         lambda { subject.say_hello_to_any_name(0) }.should_not raise_error ArgumentError
       end
     end
-    
+
     it "generates rdoc description" do
       ClassWithMethodValidation.active_rdoc(:say_hello_to).should == <<EXPECTED_OUTPUT.chomp
 @first_name :: (String)
