@@ -18,7 +18,7 @@ describe ActiveDoc::MethodsDoc do
     subject { ClassWithMethodValidation.new }
     context "with wrong type" do
       it "raises ArgumentError" do
-        lambda { subject.say_hello_to(0) }.should raise_error ArgumentError
+        lambda { subject.say_hello_to(0, "Necas") }.should raise_error ArgumentError
       end
     end
 

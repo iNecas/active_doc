@@ -5,32 +5,30 @@ module ActiveDoc
         @name = name
         @type = type
       end
-      
-      def validate(receiver, method)
-        argument_name = @name
-        expected_type = @type
+
+      def validate(method, args)
+        argument_name            = @name
+        expected_type            = @type
         described_argument_index = method.parameters.find_index { |(arg, name)| name == argument_name }
         if described_argument_index
-          ActiveDoc.before_method(receiver, method, self) do |args|
-            current_value = args[described_argument_index]
-            raise ArgumentError.new("Wrong type for argument '#{argument_name}'. Expected #{expected_type}, got #{current_value.class}") unless current_value.is_a?(expected_type)
-          end
+          current_value = args[described_argument_index]
+          raise ArgumentError.new("Wrong type for argument '#{argument_name}'. Expected #{expected_type}, got #{current_value.class}") unless current_value.is_a?(expected_type)
         else
           raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{argument_name}' of type #{expected_type}")
         end
       end
-      
+
       def to_rdoc
         "@#{@name} :: (#{@type})"
       end
     end
-    
+
     module Dsl
       def describe_arg(name, type)
         ActiveDoc.register_validator(ActiveDoc::MethodsDoc::Validator.new(name, type))
       end
     end
-    
+
   end
 end
 ActiveDoc::Dsl.send(:include, ActiveDoc::MethodsDoc::Dsl)
