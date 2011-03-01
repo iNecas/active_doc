@@ -24,7 +24,7 @@ module ActiveDoc
     end
 
     module Dsl
-      def describe_arg(name, type)
+      def takes(name, type)
         ActiveDoc.register_validator(ActiveDoc::MethodsDoc::Validator.new(name, type))
       end
     end

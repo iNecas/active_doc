@@ -5,14 +5,14 @@ describe ActiveDoc::MethodsDoc do
     class ClassWithMethodValidation
       include ActiveDoc
 
-      describe_arg :first_name, String
-      describe_arg :last_name, String
+      takes :first_name, String
+      takes :last_name, String
 
       def say_hello_to(first_name, last_name)
         return "Hello #{first_name} #{last_name}"
       end
 
-      describe_arg :message, String
+      takes :message, String
 
       def self.announce(message)
         return "People of the Earth, hear the message: '#{message}'"
