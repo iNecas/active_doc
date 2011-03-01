@@ -66,13 +66,6 @@ describe ActiveDoc::MethodsDoc do
         end
       end
     end
-
-    it "generates rdoc description" do
-      ClassWithMethodValidation.active_rdoc(:say_hello_to).should == <<EXPECTED_OUTPUT.chomp
-@first_name :: (String)
-@last_name :: (String)
-EXPECTED_OUTPUT
-    end
   end
 
 end
