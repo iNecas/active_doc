@@ -1,3 +1,11 @@
+== 0.1.0.beta.2 (to be released)
+Generating RDOC
+
+=== New features
+* Generate rdoc for method descriptions (TODO: overwrite previously generated documentation)
+* Possibility to select class and method to generate documentation (TODO)
+* Rake task for generating RDOC (TODO)
+
 == 0.1.0.beta.1 (2011-03-01)
 
 First gem pre-release!
