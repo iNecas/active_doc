@@ -1,0 +1,8 @@
+= ActiveDoc
+
+The main website is at http://github.com/necasik/active_doc
+
+== Copyright
+
+Copyright (c) 2011 Ivan Nečas. See LICENSE for details.
+

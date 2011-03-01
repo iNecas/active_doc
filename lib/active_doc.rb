@@ -1,4 +1,5 @@
 module ActiveDoc
+  VERSION = "0.1.0.beta.1"
   def self.included(base)
     base.extend(ClassMethods)
     base.extend(Dsl)
