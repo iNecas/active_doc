@@ -1,3 +1,4 @@
+require 'active_doc/documented_method'
 module ActiveDoc
   VERSION = "0.1.0.beta.1"
   def self.included(base)
@@ -11,19 +12,19 @@ module ActiveDoc
       @current_validators << validator
     end
 
-    def validate(base, method_name)
+    def validate(base, method_name, origin)
       if @current_validators
         method_validators = @current_validators
         @current_validators     = nil
         @validators ||= {}
-        @validators[[base, method_name]] = method_validators
+        @validators[[base, method_name]] = ActiveDoc::DocumentedMethod.new(base, method_name, method_validators, origin)
         before_method(base, method_name, nil) do |method, args|
           method_validators.each { |validator| validator.validate(method, args) }
         end
       end
     end
     
-    def validators_for_method(base, method_name)
+    def documented_method(base, method_name)
       @validators && @validators[[base,method_name]]
     end
 
@@ -46,11 +47,11 @@ module ActiveDoc
   
   module ClassMethods
     def method_added(method_name)
-      ActiveDoc.validate(self, method_name)
+      ActiveDoc.validate(self, method_name, caller.first)
     end
 
     def singleton_method_added(method_name)
-      ActiveDoc.validate(self.singleton_class, method_name)
+      ActiveDoc.validate(self.singleton_class, method_name, caller.first)
     end
   end
 end
