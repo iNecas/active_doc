@@ -18,7 +18,7 @@ module ActiveDoc
         @current_validators     = nil
         @validators ||= {}
         @validators[[base, method_name]] = ActiveDoc::DocumentedMethod.new(base, method_name, method_validators, origin)
-        before_method(base, method_name, nil) do |method, args|
+        before_method(base, method_name) do |method, args|
           method_validators.each { |validator| validator.validate(method, args) }
         end
       end
@@ -28,7 +28,7 @@ module ActiveDoc
       @validators && @validators[[base,method_name]]
     end
 
-    def before_method(base, method_name, validator)
+    def before_method(base, method_name)
       method = base.instance_method(method_name)
       base.class_eval do
         self.send(:define_method, "#{method_name}_with_validation") do |*args|
