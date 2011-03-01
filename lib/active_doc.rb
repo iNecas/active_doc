@@ -47,6 +47,10 @@ module ActiveDoc
     def method_added(method_name)
       ActiveDoc.validate(self, method_name)
     end
+
+    def singleton_method_added(method_name)
+      ActiveDoc.validate(self.singleton_class, method_name)
+    end
     
     def active_rdoc(method_name)
       ActiveDoc.validators_for_method(self, method_name).map{|validator| validator.to_rdoc}.join("\n")
