@@ -27,6 +27,10 @@ module ActiveDoc
     def documented_method(base, method_name)
       @validators && @validators[[base,method_name]]
     end
+    
+    def documented_methods
+      @validators.values
+    end
 
     def before_method(base, method_name)
       method = base.instance_method(method_name)
