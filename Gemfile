@@ -1,3 +1,6 @@
 source "http://rubygems.org"
 
-gem "rspec"
+group :development do
+  gem 'bundler'
+  gem "rspec"
+end
