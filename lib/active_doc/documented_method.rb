@@ -18,7 +18,7 @@ module ActiveDoc
         rdoc_lines = to_rdoc.lines.to_a
         rdoc_space_range = rdoc_space_range(offset)
         lines[rdoc_space_range] = rdoc_lines
-        offset += rdoc_space_range.to_a.size - rdoc_lines.size + 2
+        offset += rdoc_lines.size - rdoc_space_range.to_a.size
         f.pos = 0
         lines.each do |line|
           f.print line

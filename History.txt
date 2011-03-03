@@ -1,12 +1,17 @@
-== 0.1.0.beta.2 (to be released)
+== 0.1.0.beta.3 (To be released)
+More options for describing arguments
+
+=== New features
+* Describe argument with regexp
+* Describe hash argument - suitable for options argument
+* Referencing to another definition
+
+== 0.1.0.beta.2 (2011-03-03)
 Generating RDOC
 
 === New features
 * Generate rdoc for method descriptions
-* Rake task for generating RDOC (TODO)
-* Describe argument with regexp
-* Describe hash argument - suitable for options argument
-* Referencing to another definition
+* Rake task for generating RDOC
 
 == 0.1.0.beta.1 (2011-03-01)
 
