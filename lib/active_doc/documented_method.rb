@@ -15,9 +15,10 @@ module ActiveDoc
     def write_rdoc(offset)
       File.open(@origin_file, "r+") do |f|
         lines = f.readlines
-        rdoc = to_rdoc
-        lines.insert(@origin_line + offset - 1, rdoc)
-        offset += to_rdoc.lines.to_a.size
+        rdoc_lines = to_rdoc.lines.to_a
+        rdoc_space_range = rdoc_space_range(offset)
+        lines[rdoc_space_range] = rdoc_lines
+        offset += rdoc_space_range.to_a.size - rdoc_lines.size + 2
         f.pos = 0
         lines.each do |line|
           f.print line
@@ -25,6 +26,11 @@ module ActiveDoc
         f.truncate(f.pos)
       end
       return offset
+    end
+    
+    protected
+    def rdoc_space_range(offset)
+      (validators.last.origin_line + offset)...(@origin_line + offset-1)
     end
     
   end

@@ -2,7 +2,7 @@
 Generating RDOC
 
 === New features
-* Generate rdoc for method descriptions (TODO: overwrite previously generated documentation)
+* Generate rdoc for method descriptions
 * Possibility to select class and method to generate documentation (TODO)
 * Rake task for generating RDOC (TODO)
 

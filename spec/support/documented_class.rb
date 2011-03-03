@@ -10,6 +10,7 @@ class ClassWithMethodValidation
 
   takes :message, String
 
+# @message :: (String) - old
   def self.announce(message)
     return "People of the Earth, hear the message: '#{message}'"
   end

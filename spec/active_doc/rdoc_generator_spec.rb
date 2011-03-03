@@ -21,14 +21,12 @@ EXPECTED_OUTPUT
   it "writes generated rdoc to file" do
     ActiveDoc::RdocGenerator.write_rdoc
     documented_class = File.read(documented_class_path)
-    puts documented_class
     documented_class.should == <<RUBY
 class ClassWithMethodValidation
   include ActiveDoc
 
   takes :first_name, String
   takes :last_name, String
-
 # @first_name :: (String)
 # @last_name :: (String)
   def say_hello_to(first_name, last_name)
@@ -36,7 +34,6 @@ class ClassWithMethodValidation
   end
 
   takes :message, String
-
 # @message :: (String)
   def self.announce(message)
     return "People of the Earth, hear the message: '\#{message}'"
