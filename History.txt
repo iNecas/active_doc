@@ -3,8 +3,10 @@ Generating RDOC
 
 === New features
 * Generate rdoc for method descriptions
-* Possibility to select class and method to generate documentation (TODO)
 * Rake task for generating RDOC (TODO)
+* Describe argument with regexp
+* Describe hash argument - suitable for options argument
+* Referencing to another definition
 
 == 0.1.0.beta.1 (2011-03-01)
 
