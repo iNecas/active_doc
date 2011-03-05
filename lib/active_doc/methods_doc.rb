@@ -2,12 +2,12 @@ module ActiveDoc
   module MethodsDoc
     class ArgumentExpectation
       def self.inherited(subclass)
-        @argument_expectations ||= []
-        @argument_expectations << subclass
+        @possible_argument_expectations ||= []
+        @possible_argument_expectations << subclass
       end
       
       def self.find(argument)
-        @argument_expectations.each do |expectation|
+        @possible_argument_expectations.each do |expectation|
           if suitable_expectation = expectation.from(argument)
             return  suitable_expectation
           end
@@ -29,6 +29,10 @@ module ActiveDoc
         "be #{@type.name}"
       end
       
+      def to_rdoc
+        @type.name
+      end
+      
       def self.from(argument)
         if argument.is_a? Class
           self.new(argument)
@@ -48,6 +52,10 @@ module ActiveDoc
       # Expected to...
       def expectation_to_s
         "match #{@regexp}"
+      end
+      
+      def to_rdoc
+        @regexp.inspect
       end
 
       def self.from(argument)
@@ -86,13 +94,13 @@ module ActiveDoc
       end
 
       def to_rdoc
-        "* +#{@name}+#{type_to_rdoc}#{desc_to_rdoc}"
+        "* +#{@name}+#{expectations_to_rdoc}#{desc_to_rdoc}"
       end
 
       private
 
-      def type_to_rdoc
-        " :: (#{@type})" if @type
+      def expectations_to_rdoc
+        " :: (#{@argument_expectations.map{|x| x.to_rdoc}.join(", ")})" unless @argument_expectations.empty?
       end
 
       def desc_to_rdoc

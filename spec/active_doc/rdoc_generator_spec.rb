@@ -15,7 +15,7 @@ describe ActiveDoc::MethodsDoc do
     ActiveDoc::RdocGenerator.for_method(PhoneBook, :add).should == <<EXPECTED_OUTPUT
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
-# * +number+ :: (String) :: Phone number
+# * +number+ :: (/^[0-9]+$/) :: Phone number
 # * +options+ :: (Hash)
 EXPECTED_OUTPUT
   end
@@ -34,11 +34,11 @@ class PhoneBook
   end
 
   takes :contact_name, String, :desc => "Name of person"
-  takes :number, String, :desc => "Phone number"
+  takes :number, /^[0-9]+$/, :desc => "Phone number"
   takes :options, Hash
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
-# * +number+ :: (String) :: Phone number
+# * +number+ :: (/^[0-9]+$/) :: Phone number
 # * +options+ :: (Hash)
   def add(contact_name, number, options = {})
     @numbers << [contact_name, number, options]

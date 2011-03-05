@@ -8,7 +8,7 @@ class PhoneBook
   end
 
   takes :contact_name, String, :desc => "Name of person"
-  takes :number, String, :desc => "Phone number"
+  takes :number, /^[0-9]+$/, :desc => "Phone number"
   takes :options, Hash
   
   def add(contact_name, number, options = {})
