@@ -1,48 +1,67 @@
 require 'spec_helper'
-class ClassWithMethodValidation
+class PhoneBook
   include ActiveDoc
-
-  takes :first_name, String
-  takes :last_name, String
-
-  def say_hello_to(first_name, last_name)
-    return "Hello #{first_name} #{last_name}"
+  attr_accessor :owner
+  
+  def initialize(owner)
+    @numbers = []
+    PhoneBook.register(self)
   end
 
-  takes :message, String
-
-  def self.announce(message)
-    return "People of the Earth, hear the message: '#{message}'"
+  takes :contact_name, String
+  takes :number, String
+  takes :options, Hash
+  
+  def add(contact_name, number, options = {})
+    @numbers << [contact_name, number, options]
   end
 
-  def self.announce_anything(sound)
-    return "People of the Earth, hear the sound: '#{sound}'"
+  takes :owner, String
+
+  def self.find_for_owner(owner)
+    @phone_books && @phone_books[owner]
+  end
+  
+  class << self
+    takes :phone_book, PhoneBook
+    def register(phone_book)
+      @phone_books ||= {}
+      @phone_books[phone_book.owner] = phone_book
+    end
   end
 
-  def say_hello_to_any_name(name)
-    return "Hello #{name}"
+  def self.phone_books
+    return @phone_books.values
+  end
+
+  def size
+    return @numbers.size
   end
 end
 
 describe ActiveDoc::MethodsDoc do
   describe "arguments validation" do
-    subject { ClassWithMethodValidation.new }
+    subject { PhoneBook.new("Peter Smith") }
     context "instance method" do
       context "with wrong type" do
         it "raises ArgumentError" do
-          lambda { subject.say_hello_to(0, "Necas") }.should raise_error ArgumentError
+          lambda { subject.add("Catty Smith", 123456) }.should raise_error ArgumentError
+          lambda { subject.add(:catty_smith, "123456") }.should raise_error ArgumentError
+          lambda { subject.add("Catty Smith", "123456", "{:category => 'family'}") }.should raise_error ArgumentError
         end
       end
 
       context "with correct type" do
         it "does not raise ArgumentError" do
-          lambda { subject.say_hello_to("Ivan", "Necas") }.should_not raise_error ArgumentError
+          subject.add("Catty Smith", "123456")
+          lambda { subject.add("Catty Smith", "123456") }.should_not raise_error ArgumentError
+          lambda { subject.add("Catty Smith", "123456", {:category => "family"}) }.should_not raise_error ArgumentError
         end
       end
 
       context "without argument validation" do
         it "does not raise ArgumentError" do
-          lambda { subject.say_hello_to_any_name(0) }.should_not raise_error ArgumentError
+          lambda { subject.size }.should_not raise_error ArgumentError
         end
       end
     end
@@ -50,19 +69,19 @@ describe ActiveDoc::MethodsDoc do
     context "class method" do
       context "with wrong type" do
         it "raises ArgumentError" do
-          lambda { subject.class.announce(:be_arrogant) }.should raise_error ArgumentError
+          lambda { subject.class.find_for_owner(:peter_smith) }.should raise_error ArgumentError
         end
       end
 
       context "with correct type" do
         it "does not raise ArgumentError" do
-          lambda { subject.class.announce("be nice to each other") }.should_not raise_error ArgumentError
+          lambda { subject.class.find_for_owner("Peter Smith") }.should_not raise_error ArgumentError
         end
       end
 
       context "without argument validation" do
         it "does not raise ArgumentError" do
-          lambda { subject.class.announce_anything(0x4020D) }.should_not raise_error ArgumentError
+          lambda { subject.class.phone_books }.should_not raise_error ArgumentError
         end
       end
     end
