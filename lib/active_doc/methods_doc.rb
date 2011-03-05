@@ -47,8 +47,17 @@ module ActiveDoc
         return argument_name
       end
 
-      def to_rdoc
-        "* +#{@name}+#{expectations_to_rdoc}#{desc_to_rdoc}"
+      def to_rdoc(hash = false)
+        name = hash ? @name.inspect : @name
+        "* +#{name}+#{expectations_to_rdoc}#{desc_to_rdoc}#{nested_to_rdoc}"
+      end
+      
+      def last_line
+        if @nested_validators
+          @nested_validators.last.last_line + 1
+        else
+          self.origin_line
+        end
       end
 
       private
@@ -59,6 +68,14 @@ module ActiveDoc
 
       def desc_to_rdoc
         " :: #{@description}" if @description
+      end
+      
+      def nested_to_rdoc
+        if @nested_validators
+          ret = @nested_validators.map{|x| "  #{x.to_rdoc(true)}"}.join("\n")
+          ret.insert(0,":\n")
+          ret
+        end
       end
     end
 

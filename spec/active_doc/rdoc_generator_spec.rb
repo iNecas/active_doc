@@ -16,13 +16,16 @@ describe ActiveDoc::MethodsDoc do
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
 # * +number+ :: (/^[0-9]+$/) :: Phone number
-# * +options+ :: (Hash)
+# * +options+ :: (Hash):
+#   * +:category+ :: (String) :: Category of this contact
 EXPECTED_OUTPUT
   end
 
   it "writes generated rdoc to file" do
     ActiveDoc::RdocGenerator.write_rdoc
     documented_class = File.read(documented_class_path)
+    require 'pp'
+    pp documented_class.lines.to_a
     documented_class.should == <<RUBY.chomp
 class PhoneBook
   include ActiveDoc
@@ -35,11 +38,14 @@ class PhoneBook
 
   takes :contact_name, String, :desc => "Name of person"
   takes :number, /^[0-9]+$/, :desc => "Phone number"
-  takes :options, Hash
+  takes :options, Hash do
+    takes :category, String, :desc => "Category of this contact"
+  end
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
 # * +number+ :: (/^[0-9]+$/) :: Phone number
-# * +options+ :: (Hash)
+# * +options+ :: (Hash):
+#   * +:category+ :: (String) :: Category of this contact
   def add(contact_name, number, options = {})
     @numbers << [contact_name, number, options]
   end

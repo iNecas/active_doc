@@ -9,7 +9,9 @@ class PhoneBook
 
   takes :contact_name, String, :desc => "Name of person"
   takes :number, /^[0-9]+$/, :desc => "Phone number"
-  takes :options, Hash
+  takes :options, Hash do
+    takes :category, String, :desc => "Category of this contact"
+  end
   
   def add(contact_name, number, options = {})
     @numbers << [contact_name, number, options]

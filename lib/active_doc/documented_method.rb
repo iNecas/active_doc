@@ -8,7 +8,7 @@ module ActiveDoc
     end
     
     def to_rdoc
-      rdoc_lines = validators.map { |validator| "# #{validator.to_rdoc}" }
+      rdoc_lines = validators.map {|x| x.to_rdoc.lines.map{ |l| "# #{l.chomp}" }}.flatten
       rdoc_lines.unshift("# ==== Attributes:")
       return rdoc_lines.join("\n") << "\n"
     end
@@ -31,7 +31,7 @@ module ActiveDoc
     
     protected
     def rdoc_space_range(offset)
-      (validators.last.origin_line + offset)...(@origin_line + offset-1)
+      (validators.last.last_line + offset)...(@origin_line + offset-1)
     end
     
   end
