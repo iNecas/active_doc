@@ -4,6 +4,12 @@ module ActiveDoc
   def self.included(base)
     base.extend(ClassMethods)
     base.extend(Dsl)
+    base.class_eval do
+      class << self
+        extend(ClassMethods)
+        extend(Dsl)
+      end
+    end
   end
 
   class << self
