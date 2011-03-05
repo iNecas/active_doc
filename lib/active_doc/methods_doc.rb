@@ -29,17 +29,22 @@ module ActiveDoc
               raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_to_s }.join(",")}; got #{current_value.class}")
             end
             if @nested_validators
-              @nested_validators.each do |nested_validator|
-                raise "Only hash is supported for nested argument documentation" unless current_value.is_a? Hash
-                hash_args_with_vals = {}
-                current_value.each {|key, value| hash_args_with_vals[key] = {:val => value, :defined => true}}
+              raise "Only hash is supported for nested argument documentation" unless current_value.is_a? Hash
+              hash_args_with_vals = {}
+              current_value.each {|key, value| hash_args_with_vals[key] = {:val => value, :defined => true}}
+              validated_keys = @nested_validators.map do |nested_validator|
                 nested_validator.validate(hash_args_with_vals)
+              end
+              unvalidated_keys = current_value.keys - validated_keys
+              unless unvalidated_keys.empty?
+                raise ArgumentError.new("Inconsistent options definition with active doc. Hash was not expected to have arguments '#{unvalidated_keys.join(", ")}'")
               end
             end
           end
         else
           raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{argument_name}' to #{@argument_expectations.map { |expectation| expectation.expectation_to_s }.join(",")};")
         end
+        return argument_name
       end
 
       def to_rdoc

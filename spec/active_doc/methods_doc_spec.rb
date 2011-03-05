@@ -49,6 +49,7 @@ describe ActiveDoc::MethodsDoc do
           lambda { subject.add(:catty_smith, "123456") }.should raise_error ArgumentError
           lambda { subject.add("Catty Smith", "123456", "{:category => 'family'}") }.should raise_error ArgumentError
           lambda { subject.add("Catty Smith", "123456", {:category => :family}) }.should raise_error ArgumentError
+          lambda { subject.add("Catty Smith", "123456", {:category => 'family', :mobile => true}) }.should raise_error ArgumentError
         end
       end
 
