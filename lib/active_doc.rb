@@ -16,15 +16,29 @@ module ActiveDoc
       @current_validators ||= []
       @current_validators << validator
     end
+    
+    def pop_current_validators
+      current_validators = @current_validators
+      @current_validators = nil
+      return current_validators
+    end
+    
+    def nested_validators
+      before_nesting_validators = self.pop_current_validators
+      yield
+      after_nesting_validators = self.pop_current_validators
+      @current_validators = before_nesting_validators
+      return after_nesting_validators
+    end
 
     def validate(base, method_name, origin)
-      if @current_validators
-        method_validators = @current_validators
-        @current_validators     = nil
+      if method_validators = pop_current_validators
         @validators ||= {}
         @validators[[base, method_name]] = ActiveDoc::DocumentedMethod.new(base, method_name, method_validators, origin)
         before_method(base, method_name) do |method, args|
-          method_validators.each { |validator| validator.validate(method, args) }
+          args_with_vals = {}
+          method.parameters.each_with_index { |(arg, name), i| args_with_vals[name] = {:val => args[i], :required => (arg != :opt), :defined => (i < args.size)}  }
+          method_validators.each { |validator| validator.validate(args_with_vals) }
         end
       end
     end

@@ -10,7 +10,9 @@ class PhoneBook
 
   takes :contact_name, String
   takes :number, /[0-9]{6}/
-  takes :options, Hash
+  takes :options, Hash do
+    takes :category, String
+  end
   def add(contact_name, number, options = {})
     @numbers << [contact_name, number, options]
   end
@@ -46,6 +48,7 @@ describe ActiveDoc::MethodsDoc do
           lambda { subject.add("Catty Smith", 123456) }.should raise_error ArgumentError
           lambda { subject.add(:catty_smith, "123456") }.should raise_error ArgumentError
           lambda { subject.add("Catty Smith", "123456", "{:category => 'family'}") }.should raise_error ArgumentError
+          lambda { subject.add("Catty Smith", "123456", {:category => :family}) }.should raise_error ArgumentError
         end
       end
 
