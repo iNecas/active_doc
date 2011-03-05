@@ -1,10 +1,14 @@
-== 0.1.0.beta.3 (To be released)
+== 0.1.0.beta.4 (To be released)
+
+=== New features
+* Referencing to another definition
+
+== 0.1.0.beta.3 (2011-03-05)
 More options for describing arguments
 
 === New features
 * Describe argument with regexp
-* Describe hash argument - suitable for options argument
-* Referencing to another definition
+* Describe hash argument with nested expectations - suitable for options argument
 
 == 0.1.0.beta.2 (2011-03-03)
 Generating RDOC

@@ -1,6 +1,6 @@
 require 'active_doc/documented_method'
 module ActiveDoc
-  VERSION = "0.1.0.beta.2"
+  VERSION = "0.1.0.beta.3"
   def self.included(base)
     base.extend(ClassMethods)
     base.extend(Dsl)
