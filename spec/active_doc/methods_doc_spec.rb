@@ -9,7 +9,7 @@ class PhoneBook
   end
 
   takes :contact_name, String
-  takes :number, String
+  takes :number, /[0-9]{6}/
   takes :options, Hash
   def add(contact_name, number, options = {})
     @numbers << [contact_name, number, options]

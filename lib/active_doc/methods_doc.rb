@@ -1,26 +1,26 @@
 module ActiveDoc
   module MethodsDoc
-    class ArgumentAssertion
+    class ArgumentExpectation
       def self.inherited(subclass)
-        @argument_assertions ||= []
-        @argument_assertions << subclass
+        @argument_expectations ||= []
+        @argument_expectations << subclass
       end
       
       def self.find(argument)
-        @argument_assertions.each do |assertion|
-          if matched_assertion = assertion.from(argument)
-            return  matched_assertion
+        @argument_expectations.each do |expectation|
+          if suitable_expectation = expectation.from(argument)
+            return  suitable_expectation
           end
         end
       end
     end
     
-    class TypeArgumentAssertion < ArgumentAssertion
+    class TypeArgumentExpectation < ArgumentExpectation
       def initialize(argument)
         @type = argument
       end
       
-      def valid?(value)
+      def fulfilled?(value)
         value.is_a? @type
       end
       
@@ -31,19 +31,41 @@ module ActiveDoc
       
       def self.from(argument)
         if argument.is_a? Class
-          TypeArgumentAssertion.new(argument)
+          self.new(argument)
         end
       end
     end
+
+    class RegexpArgumentExpectation < ArgumentExpectation
+      def initialize(argument)
+        @regexp = argument
+      end
+
+      def fulfilled?(value)
+        value =~ @regexp
+      end
+
+      # Expected to...
+      def expectation_to_s
+        "match #{@regexp}"
+      end
+
+      def self.from(argument)
+        if argument.is_a? Regexp
+          self.new(argument)
+        end
+      end
+    end
+    
     class Validator
       attr_reader :origin_file, :origin_line
 
-      def initialize(name, argument_assertion, origin, options = {}, &block)
+      def initialize(name, argument_expectation, origin, options = {}, &block)
         @name = name
         @origin_file, @origin_line = origin.split(":")
         @origin_line = @origin_line.to_i
         @description = options[:desc]
-        @argument_assertions = [ArgumentAssertion.find(argument_assertion)]
+        @argument_expectations = [ArgumentExpectation.find(argument_expectation)]
       end
 
       def validate(method, args)
@@ -53,9 +75,9 @@ module ActiveDoc
           optional_parameter = (method.parameters[described_argument_index].first == :opt && described_argument_index >= args.size)
           unless optional_parameter
             current_value = args[described_argument_index]
-            invalid_assertions = @argument_assertions.find_all{|assertion| not assertion.valid?(current_value)}
-            unless invalid_assertions.empty?
-              raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{invalid_assertions.map{|assertion| assertion.expectation_to_s}.join(",")}; got #{current_value.class}")
+            failed_expectations = @argument_expectations.find_all{|expectation| not expectation.fulfilled?(current_value)}
+            unless failed_expectations.empty?
+              raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{failed_expectations.map{|expectation| expectation.expectation_to_s}.join(",")}; got #{current_value.class}")
             end
           end
         else
