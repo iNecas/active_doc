@@ -17,7 +17,8 @@ module ActiveDoc
         described_argument_index = method.parameters.find_index { |(arg, name)| name == argument_name }
         if described_argument_index
           current_value = args[described_argument_index]
-          unless current_value.is_a?(expected_type) || (method.parameters[described_argument_index].first == :opt && current_value.nil?)
+          optional_parameter = (method.parameters[described_argument_index].first == :opt && described_argument_index >= args.size)
+          unless current_value.is_a?(expected_type) || optional_parameter
             raise ArgumentError.new("Wrong type for argument '#{argument_name}'. Expected #{expected_type}, got #{current_value.class}")
           end
         else
