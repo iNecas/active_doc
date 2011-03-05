@@ -30,6 +30,7 @@ module ActiveDoc
             end
             if @nested_validators
               @nested_validators.each do |nested_validator|
+                raise "Only hash is supported for nested argument documentation" unless current_value.is_a? Hash
                 hash_args_with_vals = {}
                 current_value.each {|key, value| hash_args_with_vals[key] = {:val => value, :defined => true}}
                 nested_validator.validate(hash_args_with_vals)
