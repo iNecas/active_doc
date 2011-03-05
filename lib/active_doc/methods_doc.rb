@@ -2,6 +2,7 @@ module ActiveDoc
   module MethodsDoc
     class Validator
       attr_reader :origin_file, :origin_line
+
       def initialize(name, type, origin, options = {}, &block)
         @name = name
         @type = type
@@ -16,7 +17,9 @@ module ActiveDoc
         described_argument_index = method.parameters.find_index { |(arg, name)| name == argument_name }
         if described_argument_index
           current_value = args[described_argument_index]
-          raise ArgumentError.new("Wrong type for argument '#{argument_name}'. Expected #{expected_type}, got #{current_value.class}") unless current_value.is_a?(expected_type)
+          unless current_value.is_a?(expected_type) || (method.parameters[described_argument_index].first == :opt && current_value.nil?)
+            raise ArgumentError.new("Wrong type for argument '#{argument_name}'. Expected #{expected_type}, got #{current_value.class}")
+          end
         else
           raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{argument_name}' of type #{expected_type}")
         end
@@ -25,13 +28,13 @@ module ActiveDoc
       def to_rdoc
         "* +#{@name}+#{type_to_rdoc}#{desc_to_rdoc}"
       end
-      
+
       private
-      
+
       def type_to_rdoc
-         " :: (#{@type})" if @type
+        " :: (#{@type})" if @type
       end
-      
+
       def desc_to_rdoc
         " :: #{@description}" if @description
       end
