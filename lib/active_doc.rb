@@ -6,7 +6,6 @@ module ActiveDoc
     base.extend(Dsl)
     base.class_eval do
       class << self
-        extend(ClassMethods)
         extend(Dsl)
       end
     end

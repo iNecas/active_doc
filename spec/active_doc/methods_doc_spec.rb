@@ -11,13 +11,11 @@ class PhoneBook
   takes :contact_name, String
   takes :number, String
   takes :options, Hash
-  
   def add(contact_name, number, options = {})
     @numbers << [contact_name, number, options]
   end
 
   takes :owner, String
-
   def self.find_for_owner(owner)
     @phone_books && @phone_books[owner]
   end

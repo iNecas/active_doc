@@ -1,25 +1,40 @@
-class ClassWithMethodValidation
+class PhoneBook
   include ActiveDoc
-
-  takes :first_name, String, :desc => "First name of the person"
-  takes :last_name, String, :desc => "Last name of the person"
-
-  def say_hello_to(first_name, last_name)
-    return "Hello #{first_name} #{last_name}"
+  attr_accessor :owner
+  
+  def initialize(owner)
+    @numbers = []
+    PhoneBook.register(self)
   end
 
-  takes :message, String
-
-# @message :: (String) - old
-  def self.announce(message)
-    return "People of the Earth, hear the message: '#{message}'"
+  takes :contact_name, String, :desc => "Name of person"
+  takes :number, String, :desc => "Phone number"
+  takes :options, Hash
+  
+  def add(contact_name, number, options = {})
+    @numbers << [contact_name, number, options]
   end
 
-  def self.announce_anything(sound)
-    return "People of the Earth, hear the sound: '#{sound}'"
+  takes :owner, String
+  
+  def self.find_for_owner(owner)
+    @phone_books && @phone_books[owner]
+  end
+  
+  class << self
+    takes :phone_book, PhoneBook
+    
+    def register(phone_book)
+      @phone_books ||= {}
+      @phone_books[phone_book.owner] = phone_book
+    end
   end
 
-  def say_hello_to_any_name(name)
-    return "Hello #{name}"
+  def self.phone_books
+    return @phone_books.values
+  end
+
+  def size
+    return @numbers.size
   end
 end

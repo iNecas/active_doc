@@ -6,48 +6,67 @@ describe ActiveDoc::MethodsDoc do
     @original_documented_class = File.read(documented_class_path)
     load documented_class_path
   end
-  
+
   after(:each) do
-    File.open(documented_class_path, "w") {|f| f << @original_documented_class}
+    File.open(documented_class_path, "w") { |f| f << @original_documented_class }
   end
-  
+
   it "generates rdoc description for a single method" do
-    ActiveDoc::RdocGenerator.for_method(ClassWithMethodValidation, :say_hello_to).should == <<EXPECTED_OUTPUT
+    ActiveDoc::RdocGenerator.for_method(PhoneBook, :add).should == <<EXPECTED_OUTPUT
 # ==== Attributes:
-# * +first_name+ :: (String) :: First name of the person
-# * +last_name+ :: (String) :: Last name of the person
+# * +contact_name+ :: (String) :: Name of person
+# * +number+ :: (String) :: Phone number
+# * +options+ :: (Hash)
 EXPECTED_OUTPUT
   end
 
   it "writes generated rdoc to file" do
     ActiveDoc::RdocGenerator.write_rdoc
     documented_class = File.read(documented_class_path)
-    documented_class.should == <<RUBY
-class ClassWithMethodValidation
+    documented_class.should == <<RUBY.chomp
+class PhoneBook
   include ActiveDoc
+  attr_accessor :owner
+  
+  def initialize(owner)
+    @numbers = []
+    PhoneBook.register(self)
+  end
 
-  takes :first_name, String, :desc => "First name of the person"
-  takes :last_name, String, :desc => "Last name of the person"
+  takes :contact_name, String, :desc => "Name of person"
+  takes :number, String, :desc => "Phone number"
+  takes :options, Hash
 # ==== Attributes:
-# * +first_name+ :: (String) :: First name of the person
-# * +last_name+ :: (String) :: Last name of the person
-  def say_hello_to(first_name, last_name)
-    return "Hello \#{first_name} \#{last_name}"
+# * +contact_name+ :: (String) :: Name of person
+# * +number+ :: (String) :: Phone number
+# * +options+ :: (Hash)
+  def add(contact_name, number, options = {})
+    @numbers << [contact_name, number, options]
   end
 
-  takes :message, String
+  takes :owner, String
 # ==== Attributes:
-# * +message+ :: (String)
-  def self.announce(message)
-    return "People of the Earth, hear the message: '\#{message}'"
+# * +owner+ :: (String)
+  def self.find_for_owner(owner)
+    @phone_books && @phone_books[owner]
+  end
+  
+  class << self
+    takes :phone_book, PhoneBook
+# ==== Attributes:
+# * +phone_book+ :: (PhoneBook)
+    def register(phone_book)
+      @phone_books ||= {}
+      @phone_books[phone_book.owner] = phone_book
+    end
   end
 
-  def self.announce_anything(sound)
-    return "People of the Earth, hear the sound: '\#{sound}'"
+  def self.phone_books
+    return @phone_books.values
   end
 
-  def say_hello_to_any_name(name)
-    return "Hello \#{name}"
+  def size
+    return @numbers.size
   end
 end
 RUBY

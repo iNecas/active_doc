@@ -11,7 +11,7 @@ module ActiveDoc
         offset = 0
         yield origin_file, documented_methods if block_given?
         documented_methods.each do |documented_method|
-          offset += documented_method.write_rdoc(offset)
+          offset = documented_method.write_rdoc(offset)
         end
       end
     end
