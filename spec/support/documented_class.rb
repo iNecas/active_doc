@@ -1,8 +1,8 @@
 class ClassWithMethodValidation
   include ActiveDoc
 
-  takes :first_name, String
-  takes :last_name, String
+  takes :first_name, String, :desc => "First name of the person"
+  takes :last_name, String, :desc => "Last name of the person"
 
   def say_hello_to(first_name, last_name)
     return "Hello #{first_name} #{last_name}"

@@ -8,8 +8,9 @@ module ActiveDoc
     end
     
     def to_rdoc
-      ret = validators.map { |validator| validator.to_rdoc }.join("\n# ") << "\n"
-      ret.insert(0,"# ")
+      rdoc_lines = validators.map { |validator| "# #{validator.to_rdoc}" }
+      rdoc_lines.unshift("# ==== Attributes:")
+      return rdoc_lines.join("\n") << "\n"
     end
     
     def write_rdoc(offset)

@@ -2,11 +2,12 @@ module ActiveDoc
   module MethodsDoc
     class Validator
       attr_reader :origin_file, :origin_line
-      def initialize(name, type, origin)
+      def initialize(name, type, origin, options = {}, &block)
         @name = name
         @type = type
         @origin_file, @origin_line = origin.split(":")
         @origin_line = @origin_line.to_i
+        @description = options[:desc]
       end
 
       def validate(method, args)
@@ -22,13 +23,23 @@ module ActiveDoc
       end
 
       def to_rdoc
-        "@#{@name} :: (#{@type})"
+        "* +#{@name}+#{type_to_rdoc}#{desc_to_rdoc}"
+      end
+      
+      private
+      
+      def type_to_rdoc
+         " :: (#{@type})" if @type
+      end
+      
+      def desc_to_rdoc
+        " :: #{@description}" if @description
       end
     end
 
     module Dsl
-      def takes(name, type)
-        ActiveDoc.register_validator(ActiveDoc::MethodsDoc::Validator.new(name, type, caller.first))
+      def takes(name, type, options = {}, &block)
+        ActiveDoc.register_validator(ActiveDoc::MethodsDoc::Validator.new(name, type, caller.first, options, &block))
       end
     end
 

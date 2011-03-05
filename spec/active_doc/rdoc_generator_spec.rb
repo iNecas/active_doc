@@ -13,8 +13,9 @@ describe ActiveDoc::MethodsDoc do
   
   it "generates rdoc description for a single method" do
     ActiveDoc::RdocGenerator.for_method(ClassWithMethodValidation, :say_hello_to).should == <<EXPECTED_OUTPUT
-# @first_name :: (String)
-# @last_name :: (String)
+# ==== Attributes:
+# * +first_name+ :: (String) :: First name of the person
+# * +last_name+ :: (String) :: Last name of the person
 EXPECTED_OUTPUT
   end
 
@@ -25,16 +26,18 @@ EXPECTED_OUTPUT
 class ClassWithMethodValidation
   include ActiveDoc
 
-  takes :first_name, String
-  takes :last_name, String
-# @first_name :: (String)
-# @last_name :: (String)
+  takes :first_name, String, :desc => "First name of the person"
+  takes :last_name, String, :desc => "Last name of the person"
+# ==== Attributes:
+# * +first_name+ :: (String) :: First name of the person
+# * +last_name+ :: (String) :: Last name of the person
   def say_hello_to(first_name, last_name)
     return "Hello \#{first_name} \#{last_name}"
   end
 
   takes :message, String
-# @message :: (String)
+# ==== Attributes:
+# * +message+ :: (String)
   def self.announce(message)
     return "People of the Earth, hear the message: '\#{message}'"
   end
