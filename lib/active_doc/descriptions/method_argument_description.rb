@@ -117,14 +117,23 @@ module ActiveDoc
           end
         end
       end
-      attr_reader :name, :origin_file, :origin_line, :argument_expectations
+      
+      module Traceable
+        def origin_file
+          @origin.split(":").first
+        end
+        
+        def origin_line
+          @origin.split(":")[1].to_i
+        end
+      end
+      
+      attr_reader :name, :origin_file
       attr_accessor :conjunction
+      include Traceable
 
       def initialize(name, argument_expectation, origin, options = {}, &block)
-        @name = name
-        @origin_file, @origin_line = origin.split(":")
-        @origin_line           = @origin_line.to_i
-        @description           = options[:desc]
+        @name, @origin, @description = name, origin, options[:desc]
         @argument_expectations = []
         @argument_expectations << ArgumentExpectation.find(argument_expectation) if argument_expectation
         if block
@@ -138,7 +147,6 @@ module ActiveDoc
             else raise "Unexpected arity of given block"
           end
         end
-        @conjunction = :and
       end
 
       def validate(args_with_vals)
@@ -147,7 +155,7 @@ module ActiveDoc
           if arg_attributes[:required] || arg_attributes[:defined]
             current_value       = arg_attributes[:val]
             failed_expectations = @argument_expectations.find_all { |expectation| not expectation.fulfilled?(current_value, args_with_vals) }
-            if self.conjunction == :and && !failed_expectations.empty? || self.conjunction == :or && (failed_expectations == @argument_expectations)
+            if !failed_expectations.empty?
               raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_to_s }.join(",")}; got #{current_value.class}")
             end
             if @nested_descriptions
@@ -203,13 +211,13 @@ module ActiveDoc
       end
       
       class Reference < MethodArgumentDescription
+        include Traceable
         def initialize(name, target_description, origin, options)
           @name = name
           @klass, @method = target_description.split("#")
           @klass = Object.const_get(@klass)
           @method = @method.to_sym
-          @origin_file, @origin_line = origin.split(":")
-          @origin_line           = @origin_line.to_i
+          @origin = origin
         end
         
         def validate(*args)
