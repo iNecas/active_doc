@@ -75,7 +75,7 @@ module ActiveDoc
         @description           = options[:desc]
         @argument_expectations = [ArgumentExpectation.find(argument_expectation)]
         if block
-          @nested_validators = ActiveDoc.nested_validators do
+          @nested_descriptions = ActiveDoc.nested_descriptions do
             Class.new.extend(Dsl).class_exec(&block)
           end
         end
@@ -91,16 +91,16 @@ module ActiveDoc
             if self.conjunction == :and && !failed_expectations.empty? || self.conjunction == :or && (failed_expectations == @argument_expectations)
               raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_to_s }.join(",")}; got #{current_value.class}")
             end
-            if @nested_validators
+            if @nested_descriptions
               raise "Only hash is supported for nested argument documentation" unless current_value.is_a? Hash
               hash_args_with_vals = {}
               current_value.each { |key, value| hash_args_with_vals[key] = {:val => value, :defined => true} }
-              validated_keys   = @nested_validators.map do |nested_validator|
-                nested_validator.validate(hash_args_with_vals)
+              described_keys   = @nested_descriptions.map do |nested_description|
+                nested_description.validate(hash_args_with_vals)
               end
-              unvalidated_keys = current_value.keys - validated_keys
-              unless unvalidated_keys.empty?
-                raise ArgumentError.new("Inconsistent options definition with active doc. Hash was not expected to have arguments '#{unvalidated_keys.join(", ")}'")
+              undescribed_keys = current_value.keys - described_keys
+              unless undescribed_keys.empty?
+                raise ArgumentError.new("Inconsistent options definition with active doc. Hash was not expected to have arguments '#{undescribed_keys.join(", ")}'")
               end
             end
           end
@@ -116,8 +116,8 @@ module ActiveDoc
       end
 
       def last_line
-        if @nested_validators
-          @nested_validators.last.last_line + 1
+        if @nested_descriptions
+          @nested_descriptions.last.last_line + 1
         else
           self.origin_line
         end
@@ -134,8 +134,8 @@ module ActiveDoc
       end
 
       def nested_to_rdoc
-        if @nested_validators
-          ret = @nested_validators.map { |x| "  #{x.to_rdoc(true)}" }.join("\n")
+        if @nested_descriptions
+          ret = @nested_descriptions.map { |x| "  #{x.to_rdoc(true)}" }.join("\n")
           ret.insert(0, ":\n")
           ret
         end
@@ -143,7 +143,7 @@ module ActiveDoc
 
       module Dsl
         def takes(name, type, options = {}, &block)
-          ActiveDoc.register_validator(ActiveDoc::Descriptions::MethodArgumentDescription.new(name, type, caller.first, options, &block))
+          ActiveDoc.register_description(ActiveDoc::Descriptions::MethodArgumentDescription.new(name, type, caller.first, options, &block))
         end
       end
 

@@ -1,4 +1,4 @@
-require 'active_doc/documented_method'
+require 'active_doc/described_method'
 module ActiveDoc
   VERSION = "0.1.0.beta.3"
   def self.included(base)
@@ -12,43 +12,43 @@ module ActiveDoc
   end
 
   class << self
-    def register_validator(validator)
-      @current_validators ||= []
-      @current_validators << validator
+    def register_description(description)
+      @current_descriptions ||= []
+      @current_descriptions << description
     end
     
-    def pop_current_validators
-      current_validators = @current_validators
-      @current_validators = nil
-      return current_validators
+    def pop_current_descriptions
+      current_descriptions = @current_descriptions
+      @current_descriptions = nil
+      return current_descriptions
     end
     
-    def nested_validators
-      before_nesting_validators = self.pop_current_validators
+    def nested_descriptions
+      before_nesting_descriptions = self.pop_current_descriptions
       yield
-      after_nesting_validators = self.pop_current_validators
-      @current_validators = before_nesting_validators
-      return after_nesting_validators
+      after_nesting_descriptions = self.pop_current_descriptions
+      @current_descriptions = before_nesting_descriptions
+      return after_nesting_descriptions
     end
 
-    def validate(base, method_name, origin)
-      if method_validators = pop_current_validators
-        @validators ||= {}
-        @validators[[base, method_name]] = ActiveDoc::DocumentedMethod.new(base, method_name, method_validators, origin)
+    def describe(base, method_name, origin)
+      if current_descriptions = pop_current_descriptions
+        @descriptions ||= {}
+        @descriptions[[base, method_name]] = ActiveDoc::DescribedMethod.new(base, method_name, current_descriptions, origin)
         before_method(base, method_name) do |method, args|
           args_with_vals = {}
           method.parameters.each_with_index { |(arg, name), i| args_with_vals[name] = {:val => args[i], :required => (arg != :opt), :defined => (i < args.size)}  }
-          method_validators.each { |validator| validator.validate(args_with_vals) }
+          current_descriptions.each { |description| description.validate(args_with_vals) }
         end
       end
     end
     
     def documented_method(base, method_name)
-      @validators && @validators[[base,method_name]]
+      @descriptions && @descriptions[[base,method_name]]
     end
     
     def documented_methods
-      @validators.values
+      @descriptions.values
     end
 
     def before_method(base, method_name)
@@ -70,11 +70,11 @@ module ActiveDoc
   
   module ClassMethods
     def method_added(method_name)
-      ActiveDoc.validate(self, method_name, caller.first)
+      ActiveDoc.describe(self, method_name, caller.first)
     end
 
     def singleton_method_added(method_name)
-      ActiveDoc.validate(self.singleton_class, method_name, caller.first)
+      ActiveDoc.describe(self.singleton_class, method_name, caller.first)
     end
   end
 end

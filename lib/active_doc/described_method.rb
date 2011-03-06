@@ -1,14 +1,14 @@
 module ActiveDoc
-  class DocumentedMethod
-    attr_reader :origin_file, :origin_line, :validators
-    def initialize(base, method_name, validators, origin)
-      @base, @method_name, @validators = base, method_name, validators
+  class DescribedMethod
+    attr_reader :origin_file, :origin_line, :descriptions
+    def initialize(base, method_name, descriptions, origin)
+      @base, @method_name, @descriptions = base, method_name, descriptions
       @origin_file, @origin_line = origin.split(":")
       @origin_line = @origin_line.to_i
     end
     
     def to_rdoc
-      rdoc_lines = validators.map {|x| x.to_rdoc.lines.map{ |l| "# #{l.chomp}" }}.flatten
+      rdoc_lines = descriptions.map {|x| x.to_rdoc.lines.map{ |l| "# #{l.chomp}" }}.flatten
       rdoc_lines.unshift("# ==== Attributes:")
       return rdoc_lines.join("\n") << "\n"
     end
@@ -31,7 +31,7 @@ module ActiveDoc
     
     protected
     def rdoc_space_range(offset)
-      (validators.last.last_line + offset)...(@origin_line + offset-1)
+      (descriptions.last.last_line + offset)...(@origin_line + offset-1)
     end
     
   end
