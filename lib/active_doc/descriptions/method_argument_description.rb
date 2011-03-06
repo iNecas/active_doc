@@ -109,6 +109,11 @@ module ActiveDoc
           end
           return nil
         end
+        
+        # to be inserted after argument description in rdoc
+        def additional_rdoc
+          return nil
+        end
       end
       
       class TypeArgumentExpectation < ArgumentExpectation
@@ -211,6 +216,61 @@ module ActiveDoc
           end
         end
       end
+      
+      class OptionsHashArgumentExpectation < ArgumentExpectation
+        def initialize(argument)
+          @proc = argument
+
+          @hash_descriptions = ActiveDoc.nested_descriptions do
+            Class.new.extend(Dsl).class_exec(&@proc)
+          end
+        end
+
+        def fulfilled?(value, args_with_vals)
+          if @hash_descriptions
+            raise "Only hash is supported for nested argument documentation" unless value.is_a? Hash
+            hash_args_with_vals = value.inject(Hash.new{|h,k| h[k] = {:defined => false}}) do |hash, (key,val)|
+              hash[key] = {:val => val, :defined => true}
+              hash
+            end
+            described_keys   = @hash_descriptions.map do |hash_description|
+              hash_description.validate(hash_args_with_vals)
+            end
+            undescribed_keys = value.keys - described_keys
+            unless undescribed_keys.empty?
+              raise ArgumentError.new("Inconsistent options definition with active doc. Hash was not expected to have arguments '#{undescribed_keys.join(", ")}'")
+            end
+          end
+          return true
+        end
+
+        # Expected to...
+        def expectation_to_s
+          "contain described keys"
+        end
+
+        def to_rdoc
+          return nil
+        end
+
+        def additional_rdoc
+          if @hash_descriptions
+            ret = @hash_descriptions.map { |x| "  #{x.to_rdoc(true)}" }.join("\n")
+            ret.insert(0, ":\n")
+            ret
+          end
+        end
+        
+        def last_line
+          @hash_descriptions && @hash_descriptions.last && (@hash_descriptions.last.last_line + 1)
+        end
+
+        def self.from(argument)
+          if argument.is_a?(Proc) && argument.arity == 0
+            self.new(argument)
+          end
+        end
+      end
 
       
       module Traceable
@@ -234,9 +294,8 @@ module ActiveDoc
         if block
           case block.arity
             when 0
-              @nested_descriptions = ActiveDoc.nested_descriptions do
-                Class.new.extend(Dsl).class_exec(&block)
-              end
+              @argument_expectations << ArgumentExpectation.find(block)
+              @last_line = @argument_expectations.last.last_line || @last_line
             when 1
               @argument_expectations << ArgumentExpectation.find(block)
             else raise "Unexpected arity of given block"
@@ -253,20 +312,6 @@ module ActiveDoc
             if !failed_expectations.empty?
               raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_to_s }.join(",")}; got #{current_value.class}")
             end
-            if @nested_descriptions
-              raise "Only hash is supported for nested argument documentation" unless current_value.is_a? Hash
-              hash_args_with_vals = current_value.inject(Hash.new{|h,k| h[k] = {:defined => false}}) do |hash, (key,val)|
-                hash[key] = {:val => val, :defined => true}
-                hash
-              end
-              described_keys   = @nested_descriptions.map do |nested_description|
-                nested_description.validate(hash_args_with_vals)
-              end
-              undescribed_keys = current_value.keys - described_keys
-              unless undescribed_keys.empty?
-                raise ArgumentError.new("Inconsistent options definition with active doc. Hash was not expected to have arguments '#{undescribed_keys.join(", ")}'")
-              end
-            end
           end
         else
           raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{argument_name}' to #{@argument_expectations.map { |expectation| expectation.expectation_to_s }.join(",")};")
@@ -276,35 +321,32 @@ module ActiveDoc
 
       def to_rdoc(hash = false)
         name = hash ? @name.inspect : @name
-        "* +#{name}+#{expectations_to_rdoc}#{desc_to_rdoc}#{nested_to_rdoc}"
+        ret = "* +#{name}+"
+        ret << expectations_to_rdoc.to_s
+        ret << desc_to_rdoc.to_s
+        ret << expectations_to_additional_rdoc.to_s
+        return ret
       end
 
       def last_line
-        if @nested_descriptions
-          @nested_descriptions.last.last_line + 1
-        else
-          self.origin_line
-        end
+        return @last_line || self.origin_line
       end
 
       private
 
       def expectations_to_rdoc
-        " :: (#{@argument_expectations.map { |x| x.to_rdoc }.join(", ")})" unless @argument_expectations.empty?
+        expectations_rdocs = @argument_expectations.map { |x| x.to_rdoc }.compact
+        " :: (#{expectations_rdocs.join(", ")})" unless expectations_rdocs.empty?
+      end
+      
+      def expectations_to_additional_rdoc
+        @argument_expectations.map { |argument_expectation| argument_expectation.additional_rdoc }.compact.join
       end
 
       def desc_to_rdoc
         " :: #{@description}" if @description
       end
 
-      def nested_to_rdoc
-        if @nested_descriptions
-          ret = @nested_descriptions.map { |x| "  #{x.to_rdoc(true)}" }.join("\n")
-          ret.insert(0, ":\n")
-          ret
-        end
-      end
-      
       class Reference < MethodArgumentDescription
         include Traceable
         def initialize(name, target_description, origin, options)
