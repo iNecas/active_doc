@@ -1,4 +1,9 @@
-== 0.1.0.beta.4 (To be released)
+== 0.1.0.beta.5 (To be released)
+
+=== New features
+* Duck-typing - defining methods for argument to respond_to?
+
+== 0.1.0.beta.4 (2011-03-06)
 
 === New features
 * Referencing to another definition
