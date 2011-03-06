@@ -57,7 +57,7 @@ module ActiveDoc
         end
 
         def to_rdoc
-          @regexp.inspect
+          @regexp.inspect.gsub('\\') { '\\\\' }
         end
 
         def self.from(argument)

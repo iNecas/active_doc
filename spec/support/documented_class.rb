@@ -2,7 +2,7 @@ class PhoneNumber
   include ActiveDoc
 
   takes :contact_name, String, :desc => "Name of person"
-  takes :number, /^[0-9]+$/, :desc => "Phone number"
+  takes :number, /^\d+$/, :desc => "Phone number"
   takes :options do
     takes :category, String, :desc => "Category of this contact"
   end

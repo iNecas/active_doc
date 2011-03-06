@@ -15,7 +15,7 @@ describe ActiveDoc::RdocGenerator do
     ActiveDoc::RdocGenerator.for_method(PhoneBook, :add).should == <<EXPECTED_OUTPUT
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
-# * +number+ :: (/^[0-9]+$/) :: Phone number
+# * +number+ :: (/^\\\\d+$/) :: Phone number
 # * +options+:
 #   * +:category+ :: (String) :: Category of this contact
 EXPECTED_OUTPUT
@@ -29,13 +29,13 @@ class PhoneNumber
   include ActiveDoc
 
   takes :contact_name, String, :desc => "Name of person"
-  takes :number, /^[0-9]+$/, :desc => "Phone number"
+  takes :number, /^\\d+$/, :desc => "Phone number"
   takes :options do
     takes :category, String, :desc => "Category of this contact"
   end
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
-# * +number+ :: (/^[0-9]+$/) :: Phone number
+# * +number+ :: (/^\\\\d+$/) :: Phone number
 # * +options+:
 #   * +:category+ :: (String) :: Category of this contact
   def initialize(contact_name, number, options = {})
@@ -56,7 +56,7 @@ class PhoneBook
   takes :options, :ref => "PhoneNumber#initialize"
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
-# * +number+ :: (/^[0-9]+$/) :: Phone number
+# * +number+ :: (/^\\\\d+$/) :: Phone number
 # * +options+:
 #   * +:category+ :: (String) :: Category of this contact
   def add(contact_name, number, options = {})
