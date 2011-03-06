@@ -109,6 +109,17 @@ module ActiveDoc
           end
           return nil
         end
+
+
+        def fulfilled?(value, args_with_vals)
+          if self.condition?(value, args_with_vals)
+            @failed_value = nil
+            return true
+          else
+            @failed_value = value
+            return false
+          end
+        end
         
         # to be inserted after argument description in rdoc
         def additional_rdoc
@@ -121,13 +132,13 @@ module ActiveDoc
           @type = argument
         end
 
-        def fulfilled?(value, args_with_vals)
+        def condition?(value, args_with_vals)
           value.is_a? @type
         end
 
         # Expected to...
-        def expectation_to_s
-          "be #{@type.name}"
+        def expectation_fail_to_s
+          "be #{@type.name}, got #{@failed_value.class.name}"
         end
 
         def to_rdoc
@@ -146,13 +157,14 @@ module ActiveDoc
           @regexp = argument
         end
 
-        def fulfilled?(value, args_with_vals)
+        def condition?(value, args_with_vals)
           value =~ @regexp
         end
 
         # Expected to...
-        def expectation_to_s
-          "match #{@regexp}"
+        # NOTE: Possible thread-safe problem
+        def expectation_fail_to_s
+          "match #{@regexp}, got '#{@failed_value.inspect}'"
         end
 
         def to_rdoc
@@ -171,13 +183,14 @@ module ActiveDoc
           @array = argument
         end
 
-        def fulfilled?(value, args_with_vals)
+        def condition?(value, args_with_vals)
           @array.include?(value)
         end
 
         # Expected to...
-        def expectation_to_s
-          "be included in #{@array.inspect}"
+        # NOTE: Possible thread-safe problem
+        def expectation_fail_to_s
+          "be included in #{@array.inspect}, got #{@failed_value.inspect}"
         end
 
         def to_rdoc
@@ -196,14 +209,14 @@ module ActiveDoc
           @proc = argument
         end
 
-        def fulfilled?(value, args_with_vals)
+        def condition?(value, args_with_vals)
           other_values = args_with_vals.inject({}) { |h, (k, v)| h[k] = v[:val];h }
           @proc.call(other_values)
         end
 
         # Expected to...
-        def expectation_to_s
-          "satisfy given condition"
+        def expectation_fail_to_s
+          "satisfy given condition, got #{@failed_value.inspect}"
         end
 
         def to_rdoc
@@ -226,7 +239,7 @@ module ActiveDoc
           end
         end
 
-        def fulfilled?(value, args_with_vals)
+        def condition?(value, args_with_vals)
           if @hash_descriptions
             raise "Only hash is supported for nested argument documentation" unless value.is_a? Hash
             hash_args_with_vals = value.inject(Hash.new{|h,k| h[k] = {:defined => false}}) do |hash, (key,val)|
@@ -245,8 +258,8 @@ module ActiveDoc
         end
 
         # Expected to...
-        def expectation_to_s
-          "contain described keys"
+        def expectation_fail_to_s
+          "contain described keys, got #{@failed_value.inspect}"
         end
 
         def to_rdoc
@@ -310,11 +323,11 @@ module ActiveDoc
             current_value       = arg_attributes[:val]
             failed_expectations = @argument_expectations.find_all { |expectation| not expectation.fulfilled?(current_value, args_with_vals) }
             if !failed_expectations.empty?
-              raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_to_s }.join(",")}; got #{current_value.class}")
+              raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_fail_to_s }.join(",")}")
             end
           end
         else
-          raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{argument_name}' to #{@argument_expectations.map { |expectation| expectation.expectation_to_s }.join(",")};")
+          raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{argument_name}'")
         end
         return argument_name
       end
