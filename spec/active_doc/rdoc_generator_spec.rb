@@ -16,7 +16,7 @@ describe ActiveDoc::RdocGenerator do
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
 # * +number+ :: (/^[0-9]+$/) :: Phone number
-# * +options+ :: (Hash):
+# * +options+:
 #   * +:category+ :: (String) :: Category of this contact
 EXPECTED_OUTPUT
   end
@@ -30,13 +30,13 @@ class PhoneNumber
 
   takes :contact_name, String, :desc => "Name of person"
   takes :number, /^[0-9]+$/, :desc => "Phone number"
-  takes :options, Hash do
+  takes :options do
     takes :category, String, :desc => "Category of this contact"
   end
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
 # * +number+ :: (/^[0-9]+$/) :: Phone number
-# * +options+ :: (Hash):
+# * +options+:
 #   * +:category+ :: (String) :: Category of this contact
   def initialize(contact_name, number, options = {})
     
@@ -57,7 +57,7 @@ class PhoneBook
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
 # * +number+ :: (/^[0-9]+$/) :: Phone number
-# * +options+ :: (Hash):
+# * +options+:
 #   * +:category+ :: (String) :: Category of this contact
   def add(contact_name, number, options = {})
     @numbers << PhoneNumber.new(contact_name, number, options)

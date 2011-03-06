@@ -3,7 +3,7 @@ class PhoneNumber
 
   takes :contact_name, String, :desc => "Name of person"
   takes :number, /^[0-9]+$/, :desc => "Phone number"
-  takes :options, Hash do
+  takes :options do
     takes :category, String, :desc => "Category of this contact"
   end
 
