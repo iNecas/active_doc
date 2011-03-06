@@ -24,17 +24,9 @@ EXPECTED_OUTPUT
   it "writes generated rdoc to file" do
     ActiveDoc::RdocGenerator.write_rdoc
     documented_class = File.read(documented_class_path)
-    require 'pp'
-    pp documented_class.lines.to_a
     documented_class.should == <<RUBY.chomp
-class PhoneBook
+class PhoneNumber
   include ActiveDoc
-  attr_accessor :owner
-  
-  def initialize(owner)
-    @numbers = []
-    PhoneBook.register(self)
-  end
 
   takes :contact_name, String, :desc => "Name of person"
   takes :number, /^[0-9]+$/, :desc => "Phone number"
@@ -46,8 +38,29 @@ class PhoneBook
 # * +number+ :: (/^[0-9]+$/) :: Phone number
 # * +options+ :: (Hash):
 #   * +:category+ :: (String) :: Category of this contact
+  def initialize(contact_name, number, options = {})
+    
+  end
+end
+class PhoneBook
+  include ActiveDoc
+  attr_accessor :owner
+  
+  def initialize(owner)
+    @numbers = []
+    PhoneBook.register(self)
+  end
+
+  takes :contact_name, :ref => "PhoneNumber#initialize"
+  takes :number, :ref => "PhoneNumber#initialize"
+  takes :options, :ref => "PhoneNumber#initialize"
+# ==== Attributes:
+# * +contact_name+ :: (String) :: Name of person
+# * +number+ :: (/^[0-9]+$/) :: Phone number
+# * +options+ :: (Hash):
+#   * +:category+ :: (String) :: Category of this contact
   def add(contact_name, number, options = {})
-    @numbers << [contact_name, number, options]
+    @numbers << PhoneNumber.new(contact_name, number, options)
   end
 
   takes :owner, String

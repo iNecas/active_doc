@@ -18,7 +18,8 @@ class PhoneBook
   end
 
   takes :owner, String
-  def self.find_for_owner(owner)
+  takes :address, :desc => "Optional address of owner"
+  def self.find_for_owner(owner, address = nil)
     @phone_books && @phone_books[owner]
   end
   

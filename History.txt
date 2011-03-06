@@ -2,6 +2,7 @@
 
 === New features
 * Referencing to another definition
+* Specifying argument expectation is not required
 
 == 0.1.0.beta.3 (2011-03-05)
 More options for describing arguments

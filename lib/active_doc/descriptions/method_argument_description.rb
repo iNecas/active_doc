@@ -13,6 +13,7 @@ module ActiveDoc
               return  suitable_expectation
             end
           end
+          return nil
         end
       end
 
@@ -65,7 +66,7 @@ module ActiveDoc
           end
         end
       end
-      attr_reader :origin_file, :origin_line, :argument_expectations
+      attr_reader :name, :origin_file, :origin_line, :argument_expectations
       attr_accessor :conjunction
 
       def initialize(name, argument_expectation, origin, options = {}, &block)
@@ -73,7 +74,8 @@ module ActiveDoc
         @origin_file, @origin_line = origin.split(":")
         @origin_line           = @origin_line.to_i
         @description           = options[:desc]
-        @argument_expectations = [ArgumentExpectation.find(argument_expectation)]
+        @argument_expectations = []
+        @argument_expectations << ArgumentExpectation.find(argument_expectation) if argument_expectation
         if block
           @nested_descriptions = ActiveDoc.nested_descriptions do
             Class.new.extend(Dsl).class_exec(&block)
@@ -140,10 +142,51 @@ module ActiveDoc
           ret
         end
       end
+      
+      class Reference < MethodArgumentDescription
+        def initialize(name, target_description, origin, options)
+          @name = name
+          @klass, @method = target_description.split("#")
+          @klass = Object.const_get(@klass)
+          @method = @method.to_sym
+          @origin_file, @origin_line = origin.split(":")
+          @origin_line           = @origin_line.to_i
+        end
+        
+        def validate(*args)
+          # we validate only in target method
+          return @name
+        end
+        
+        def to_rdoc(*args)
+            referenced_argument_description.to_rdoc
+        end
+        
+        private
+        
+        def referenced_argument_description
+          if referenced_described_method = ActiveDoc.documented_method(@klass, @method)
+            if referenced_argument_description = referenced_described_method.descriptions.find { |description| description.name == @name }
+              return referenced_argument_description
+            end
+          end
+          raise "Missing referenced argument description '#{@klass.name}##{@method}'"
+        end
+      end
 
       module Dsl
-        def takes(name, type, options = {}, &block)
-          ActiveDoc.register_description(ActiveDoc::Descriptions::MethodArgumentDescription.new(name, type, caller.first, options, &block))
+        def takes(name, *args, &block)
+          if args.size > 1 || !args.first.is_a?(Hash)
+            argument_expectation = args.shift || nil
+          else
+            argument_expectation = nil
+          end
+          options = args.pop || {}
+          if ref_string = options[:ref]
+            ActiveDoc.register_description(ActiveDoc::Descriptions::MethodArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block))
+          else
+            ActiveDoc.register_description(ActiveDoc::Descriptions::MethodArgumentDescription.new(name, argument_expectation, caller.first, options, &block))
+          end
         end
       end
 
