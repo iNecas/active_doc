@@ -175,6 +175,84 @@ module ActiveDoc
       end
 
       module Dsl
+        # Describes method argument.
+        #
+        # ==== Attributes:
+        # * +name+ :: name of method argument.
+        # * +argument_expectation+ :: expected +Class+, +Regexp+ (or another values see +ArgumentExpectation+ subclasses
+        #                             for more details).
+        # * +options+:
+        #   * +:ref+ :: (/^\\S+#\\S+$/) :: Reference to another method with description of this argument. Suitable when 
+        #                                  passing argument to another method.
+        #   * +:desc+ :: Textual additional description and explanation of argument 
+        #
+        # === Validation
+        # 
+        # When method is described, checking routines are attached to original method. When some argument
+        # does not meet expectations, ArgumentError is raised.
+        #
+        # Argument description is not compulsory, e.g. when you not specify +takes+ for some argument, nothing
+        # happens.
+        # 
+        # ==== Example:
+        #
+        #  takes :contact_name, String, :desc => "Last name of contact person"
+        #  takes :number, /[0-9]{6}/
+        #  def add(contact_name, number)
+        #    ...
+        #  end
+        #
+        # This adds to +add+ methods routines checking, that value of +contact_name+ ia_a? String and 
+        # value of +add+ =~ /[0-9]{6}/.
+        # 
+        # === Nesting:
+        # Takes can take a block, that allows additional description of argument using the same DSL.
+        # Currently, it's used to describe Hash options.
+        #
+        # ==== Example:
+        #
+        #  takes :options do
+        #    takes :category, String
+        #  end
+        #  def add(number, options)
+        #    ...
+        #  end
+        #
+        # ==== Hash validation:
+        # In current implementation, when describing hash argument with nested description, every expected
+        # key must be mentioned. Reason: preventing from mistakenly sending unexpected options.
+        #
+        # === RDoc generating
+        # 
+        # When generating +RDoc+ comments from +active_doc+, space between last +takes+ description an method definition
+        # is used. *Bear in mind: Everything in this space will be replaced with generated comments*
+        # ==== Example:
+        #
+        #  takes :contact_name, String, :desc => "Last name of contact person"
+        #  takes :number, /[0-9]{6}/
+        #  takes :options do
+        #    takes :category, String
+        #  end
+        #  # this comment was there before
+        #  def add(contact_name, number, options)
+        #    ...
+        #  end
+        #
+        # After running rake task for RDoc comments, it's changed to:
+        #
+        #  takes :contact_name, String, :desc => "Last name of contact person"
+        #  takes :number, /[0-9]{6}/
+        #  takes :options do
+        #    takes :category, String
+        #  end
+        #  # ==== Arguments:
+        #  # *+contact_name+ :: (String) :: Last name of contact person
+        #  # *+number+ :: (/[0-9]{6}/) 
+        #  # *+options+ :
+        #  #   * +:category+ :: (String)
+        #  def add(contact_name, number, options)
+        #    ...
+        #  end
         def takes(name, *args, &block)
           if args.size > 1 || !args.first.is_a?(Hash)
             argument_expectation = args.shift || nil
