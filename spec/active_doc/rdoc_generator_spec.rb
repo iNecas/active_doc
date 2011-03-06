@@ -12,7 +12,7 @@ describe ActiveDoc::RdocGenerator do
   end
 
   it "writes generated rdoc to file" do
-    ActiveDoc::RdocGenerator.write_rdoc
+    ActiveDoc::RdocGenerator.write_rdoc(documented_class_path)
     documented_class = File.read(documented_class_path)
     documented_class.should == <<RUBY.chomp
 class PhoneNumber
