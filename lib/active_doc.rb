@@ -78,6 +78,6 @@ module ActiveDoc
     end
   end
 end
-require 'active_doc/methods_doc'
+require 'active_doc/descriptions'
 require 'active_doc/rdoc_generator'
 

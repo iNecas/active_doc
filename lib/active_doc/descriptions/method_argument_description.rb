@@ -1,7 +1,70 @@
-require 'active_doc/methods_doc/argument_expectations'
 module ActiveDoc
-  module MethodsDoc
-    class Validator
+  module Descriptions
+    class MethodArgumentDescription
+      class ArgumentExpectation
+        def self.inherited(subclass)
+          @possible_argument_expectations ||= []
+          @possible_argument_expectations << subclass
+        end
+
+        def self.find(argument)
+          @possible_argument_expectations.each do |expectation|
+            if suitable_expectation = expectation.from(argument)
+              return  suitable_expectation
+            end
+          end
+        end
+      end
+
+      class TypeArgumentExpectation < ArgumentExpectation
+        def initialize(argument)
+          @type = argument
+        end
+
+        def fulfilled?(value)
+          value.is_a? @type
+        end
+
+        # Expected to...
+        def expectation_to_s
+          "be #{@type.name}"
+        end
+
+        def to_rdoc
+          @type.name
+        end
+
+        def self.from(argument)
+          if argument.is_a? Class
+            self.new(argument)
+          end
+        end
+      end
+
+      class RegexpArgumentExpectation < ArgumentExpectation
+        def initialize(argument)
+          @regexp = argument
+        end
+
+        def fulfilled?(value)
+          value =~ @regexp
+        end
+
+        # Expected to...
+        def expectation_to_s
+          "match #{@regexp}"
+        end
+
+        def to_rdoc
+          @regexp.inspect
+        end
+
+        def self.from(argument)
+          if argument.is_a? Regexp
+            self.new(argument)
+          end
+        end
+      end
       attr_reader :origin_file, :origin_line, :argument_expectations
       attr_accessor :conjunction
 
@@ -13,7 +76,7 @@ module ActiveDoc
         @argument_expectations = [ArgumentExpectation.find(argument_expectation)]
         if block
           @nested_validators = ActiveDoc.nested_validators do
-            Class.new.extend(ActiveDoc::MethodsDoc::Dsl).class_exec(&block)
+            Class.new.extend(Dsl).class_exec(&block)
           end
         end
         @conjunction = :and
@@ -31,8 +94,8 @@ module ActiveDoc
             if @nested_validators
               raise "Only hash is supported for nested argument documentation" unless current_value.is_a? Hash
               hash_args_with_vals = {}
-              current_value.each {|key, value| hash_args_with_vals[key] = {:val => value, :defined => true}}
-              validated_keys = @nested_validators.map do |nested_validator|
+              current_value.each { |key, value| hash_args_with_vals[key] = {:val => value, :defined => true} }
+              validated_keys   = @nested_validators.map do |nested_validator|
                 nested_validator.validate(hash_args_with_vals)
               end
               unvalidated_keys = current_value.keys - validated_keys
@@ -51,7 +114,7 @@ module ActiveDoc
         name = hash ? @name.inspect : @name
         "* +#{name}+#{expectations_to_rdoc}#{desc_to_rdoc}#{nested_to_rdoc}"
       end
-      
+
       def last_line
         if @nested_validators
           @nested_validators.last.last_line + 1
@@ -69,22 +132,22 @@ module ActiveDoc
       def desc_to_rdoc
         " :: #{@description}" if @description
       end
-      
+
       def nested_to_rdoc
         if @nested_validators
-          ret = @nested_validators.map{|x| "  #{x.to_rdoc(true)}"}.join("\n")
-          ret.insert(0,":\n")
+          ret = @nested_validators.map { |x| "  #{x.to_rdoc(true)}" }.join("\n")
+          ret.insert(0, ":\n")
           ret
         end
       end
-    end
 
-    module Dsl
-      def takes(name, type, options = {}, &block)
-        ActiveDoc.register_validator(ActiveDoc::MethodsDoc::Validator.new(name, type, caller.first, options, &block))
+      module Dsl
+        def takes(name, type, options = {}, &block)
+          ActiveDoc.register_validator(ActiveDoc::Descriptions::MethodArgumentDescription.new(name, type, caller.first, options, &block))
+        end
       end
-    end
 
+    end
   end
 end
-ActiveDoc::Dsl.send(:include, ActiveDoc::MethodsDoc::Dsl)
+ActiveDoc::Dsl.send(:include, ActiveDoc::Descriptions::MethodArgumentDescription::Dsl)

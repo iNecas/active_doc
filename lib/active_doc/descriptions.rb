@@ -1,0 +1,1 @@
+require 'active_doc/descriptions/method_argument_description'

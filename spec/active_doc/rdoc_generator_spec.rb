@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe ActiveDoc::MethodsDoc do
+describe ActiveDoc::RdocGenerator do
   let(:documented_class_path) { File.expand_path("../../support/documented_class.rb", __FILE__) }
   before(:each) do
     @original_documented_class = File.read(documented_class_path)

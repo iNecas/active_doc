@@ -39,7 +39,7 @@ class PhoneBook
   end
 end
 
-describe ActiveDoc::MethodsDoc do
+describe ActiveDoc::Descriptions::MethodArgumentDescription do
   describe "arguments validation" do
     subject { PhoneBook.new("Peter Smith") }
     context "instance method" do
