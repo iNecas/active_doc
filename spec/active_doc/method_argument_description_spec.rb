@@ -9,17 +9,12 @@ class PhoneBook
   end
 
   takes :contact_name, String
-  takes :number, /[0-9]{6}/
-  takes :options, Hash do
-    takes :category, String
-  end
-  def add(contact_name, number, options = {})
-    @numbers << [contact_name, number, options]
+  def add(contact_name, number)
+    @numbers << [contact_name, number]
   end
 
   takes :owner, String
-  takes :address, :desc => "Optional address of owner"
-  def self.find_for_owner(owner, address = nil)
+  def self.find_for_owner(owner)
     @phone_books && @phone_books[owner]
   end
   
@@ -41,16 +36,12 @@ class PhoneBook
 end
 
 describe ActiveDoc::Descriptions::MethodArgumentDescription do
-  describe "arguments validation" do
+  describe "more described methods" do
     subject { PhoneBook.new("Peter Smith") }
     context "instance method" do
       context "with wrong type" do
         it "raises ArgumentError" do
-          lambda { subject.add("Catty Smith", 123456) }.should raise_error ArgumentError
           lambda { subject.add(:catty_smith, "123456") }.should raise_error ArgumentError
-          lambda { subject.add("Catty Smith", "123456", "{:category => 'family'}") }.should raise_error ArgumentError
-          lambda { subject.add("Catty Smith", "123456", {:category => :family}) }.should raise_error ArgumentError
-          lambda { subject.add("Catty Smith", "123456", {:category => 'family', :mobile => true}) }.should raise_error ArgumentError
         end
       end
 
@@ -58,7 +49,7 @@ describe ActiveDoc::Descriptions::MethodArgumentDescription do
         it "does not raise ArgumentError" do
           subject.add("Catty Smith", "123456")
           lambda { subject.add("Catty Smith", "123456") }.should_not raise_error ArgumentError
-          lambda { subject.add("Catty Smith", "123456", {:category => "family"}) }.should_not raise_error ArgumentError
+          lambda { subject.add("Catty Smith", 123456) }.should_not raise_error ArgumentError
         end
       end
 
@@ -89,6 +80,217 @@ describe ActiveDoc::Descriptions::MethodArgumentDescription do
       end
     end
   end
+  
+  context "for description of optional parameter" do
+    subject do
+      Class.new do
+        include ActiveDoc
+        takes :conjunction, String
+        def join(conjunction = ","); end
+      end.new
+    end
+    
+    it "validates only when argument is given" do
+      lambda{ subject.join }.should_not raise_error ArgumentError
+      lambda{ subject.join(";") }.should_not raise_error ArgumentError
+      lambda{ subject.join(2) }.should raise_error ArgumentError
+    end
+  end
+  
+  context "with nested attributes" do
+    let :subject_object do
+      Class.new do
+        include ActiveDoc
+        takes :options do
+          takes :conjunction, String
+        end
+        def join(options); end
+      end.new
+    end
 
+    context "when described key is not specified" do
+      subject { lambda { subject_object.join({})} }
+      
+      it { should_not raise_error ArgumentError }
+    end
+    
+    context "when described key has wrong value" do
+      subject { lambda { subject_object.join(:conjunction => 2)} }
+
+      it { should raise_error ArgumentError }
+    end
+
+    context "when described key has valid value" do
+      subject { lambda { subject_object.join(:conjunction => ",")} }
+
+      it { should_not raise_error ArgumentError }
+    end
+
+    context "when undescribed key is given" do
+      subject { lambda { subject_object.join(:last_conjunction => "and")} }
+
+      it { should raise_error ArgumentError }
+    end
+  end
+  
+  describe "none expectation specified" do
+    let :subject_class do
+      Class.new do
+        include ActiveDoc
+        takes :conjunction, :desc => "String between items when joining"
+        def join(conjunction); end
+      end
+    end
+
+    describe "Validation" do
+      subject { lambda { subject_class.new.join(";") } }
+
+      it { should_not raise_error ArgumentError }
+    end
+
+    describe "Rdoc comment" do
+      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join)}
+
+      it { should == <<RDOC }
+# ==== Attributes:
+# * +conjunction+ :: String between items when joining
+RDOC
+    end
+  end
+  
+  describe "type argument expectation" do
+    let :subject_class do
+      Class.new do
+        include ActiveDoc
+        takes :conjunction, String
+        def join(conjunction); end
+      end
+    end
+    
+    describe "Validation" do
+      context "for valid value" do
+        subject { lambda { subject_class.new.join(";") } }
+        
+        it { should_not raise_error ArgumentError }
+      end
+      
+      context "for invalid value" do
+        subject { lambda { subject_class.new.join(1) } }
+
+        it { should raise_error ArgumentError }
+      end
+    end
+    
+    describe "Rdoc comment" do
+      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join)}
+      
+      it { should == <<RDOC }
+# ==== Attributes:
+# * +conjunction+ :: (String)
+RDOC
+    end
+  end
+
+  describe "regexp argument expectation" do
+    let :subject_class do
+      Class.new do
+        include ActiveDoc
+        takes :conjunction, /^(and|or)$/
+        def join(conjunction) ; end
+      end
+    end
+
+    describe "Validation" do
+      context "for valid value" do
+        subject { lambda { subject_class.new.join("and") } }
+
+        it { should_not raise_error ArgumentError }
+      end
+
+      context "for invalid value" do
+        subject { lambda { subject_class.new.join("xor") } }
+
+        it { should raise_error ArgumentError }
+      end
+    end
+
+    describe "Rdoc comment" do
+      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join) }
+
+      it { should == <<RDOC }
+# ==== Attributes:
+# * +conjunction+ :: (/^(and|or)$/)
+RDOC
+    end
+  end
+  
+  describe "array argument expectation" do
+    let :subject_class do
+      Class.new do
+        include ActiveDoc
+        takes :conjunction, %w{and or}
+        def join(conjunction); end
+      end
+    end
+
+    describe "Validation" do
+      context "for valid value" do
+        subject { lambda { subject_class.new.join("and") } }
+
+        it { should_not raise_error ArgumentError }
+      end
+
+      context "for invalid value" do
+        subject { lambda { subject_class.new.join("xor") } }
+
+        it { should raise_error ArgumentError }
+      end
+    end
+
+    describe "Rdoc comment" do
+      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join) }
+
+      it { should == <<RDOC }
+# ==== Attributes:
+# * +conjunction+ :: (["and", "or"])
+RDOC
+    end
+  end
+  
+  
+  describe "complex condition argument expectation" do
+    let :subject_class do
+      Class.new do
+        include ActiveDoc
+        takes(:number){|args| args[:number] != 0 }
+        def divide(number) ; end
+      end
+    end
+
+    describe "Validation" do
+      context "for valid value" do
+        subject { lambda { subject_class.new.divide(1) } }
+
+        it { should_not raise_error ArgumentError }
+      end
+
+      context "for invalid value" do
+        subject { lambda { subject_class.new.divide(0) } }
+
+        it { should raise_error ArgumentError }
+      end
+    end
+
+    describe "Rdoc comment" do
+      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :divide) }
+
+      it { should == <<RDOC }
+# ==== Attributes:
+# * +number+ :: (Complex Condition)
+RDOC
+    end
+  end
+  
+  
 end
 

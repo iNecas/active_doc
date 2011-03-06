@@ -98,7 +98,7 @@ module ActiveDoc
         end
 
         def fulfilled?(value, args_with_vals)
-          other_values = args_with_vals.inject({}) { |h, (k, v)| h[k] = v[:val] }
+          other_values = args_with_vals.inject({}) { |h, (k, v)| h[k] = v[:val];h }
           @proc.call(other_values)
         end
 
@@ -152,8 +152,10 @@ module ActiveDoc
             end
             if @nested_descriptions
               raise "Only hash is supported for nested argument documentation" unless current_value.is_a? Hash
-              hash_args_with_vals = {}
-              current_value.each { |key, value| hash_args_with_vals[key] = {:val => value, :defined => true} }
+              hash_args_with_vals = current_value.inject(Hash.new{|h,k| h[k] = {:defined => false}}) do |hash, (key,val)|
+                hash[key] = {:val => val, :defined => true}
+                hash
+              end
               described_keys   = @nested_descriptions.map do |nested_description|
                 nested_description.validate(hash_args_with_vals)
               end
