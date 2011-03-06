@@ -2,6 +2,18 @@ require 'spec_helper'
 
 describe ActiveDoc::RdocGenerator do
   let(:documented_class_path) { File.expand_path("../../support/documented_class.rb", __FILE__) }
+  class PhoneNumberLocal
+    include ActiveDoc
+
+    takes :contact_name, String, :desc => "Name of person"
+    takes :number, /^\d+$/, :desc => "Phone number"
+    takes :sex, [:male, :female]
+    takes :options do
+      takes :category, String, :desc => "Category of this contact"
+    end
+
+    def initialize(contact_name, number, options = {}); end
+  end
   before(:each) do
     @original_documented_class = File.read(documented_class_path)
     load documented_class_path
@@ -12,10 +24,11 @@ describe ActiveDoc::RdocGenerator do
   end
 
   it "generates rdoc description for a single method" do
-    ActiveDoc::RdocGenerator.for_method(PhoneBook, :add).should == <<EXPECTED_OUTPUT
+    ActiveDoc::RdocGenerator.for_method(PhoneNumberLocal, :initialize).should == <<EXPECTED_OUTPUT
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
 # * +number+ :: (/^\\\\d+$/) :: Phone number
+# * +sex+ :: ([:male, :female])
 # * +options+:
 #   * +:category+ :: (String) :: Category of this contact
 EXPECTED_OUTPUT

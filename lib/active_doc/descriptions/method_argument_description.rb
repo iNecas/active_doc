@@ -66,6 +66,31 @@ module ActiveDoc
           end
         end
       end
+
+      class ArrayArgumentExpectation < ArgumentExpectation
+        def initialize(argument)
+          @array = argument
+        end
+
+        def fulfilled?(value)
+          @array.include?(value)
+        end
+
+        # Expected to...
+        def expectation_to_s
+          "be included in #{@array.inspect}"
+        end
+
+        def to_rdoc
+          @array.inspect
+        end
+
+        def self.from(argument)
+          if argument.is_a? Array
+            self.new(argument)
+          end
+        end
+      end
       attr_reader :name, :origin_file, :origin_line, :argument_expectations
       attr_accessor :conjunction
 
