@@ -22,7 +22,7 @@ module ActiveDoc
           @type = argument
         end
 
-        def fulfilled?(value)
+        def fulfilled?(value, args_with_vals)
           value.is_a? @type
         end
 
@@ -47,7 +47,7 @@ module ActiveDoc
           @regexp = argument
         end
 
-        def fulfilled?(value)
+        def fulfilled?(value, args_with_vals)
           value =~ @regexp
         end
 
@@ -72,7 +72,7 @@ module ActiveDoc
           @array = argument
         end
 
-        def fulfilled?(value)
+        def fulfilled?(value, args_with_vals)
           @array.include?(value)
         end
 
@@ -91,6 +91,32 @@ module ActiveDoc
           end
         end
       end
+      
+      class ComplexConditionArgumentExpectation < ArgumentExpectation
+        def initialize(argument)
+          @proc = argument
+        end
+
+        def fulfilled?(value, args_with_vals)
+          other_values = args_with_vals.inject({}) { |h, (k, v)| h[k] = v[:val] }
+          @proc.call(other_values)
+        end
+
+        # Expected to...
+        def expectation_to_s
+          "satisfy given condition"
+        end
+
+        def to_rdoc
+          "Complex Condition"
+        end
+
+        def self.from(argument)
+          if argument.is_a?(Proc) && argument.arity == 1
+            self.new(argument)
+          end
+        end
+      end
       attr_reader :name, :origin_file, :origin_line, :argument_expectations
       attr_accessor :conjunction
 
@@ -102,8 +128,14 @@ module ActiveDoc
         @argument_expectations = []
         @argument_expectations << ArgumentExpectation.find(argument_expectation) if argument_expectation
         if block
-          @nested_descriptions = ActiveDoc.nested_descriptions do
-            Class.new.extend(Dsl).class_exec(&block)
+          case block.arity
+            when 0
+              @nested_descriptions = ActiveDoc.nested_descriptions do
+                Class.new.extend(Dsl).class_exec(&block)
+              end
+            when 1
+              @argument_expectations << ArgumentExpectation.find(block)
+            else raise "Unexpected arity of given block"
           end
         end
         @conjunction = :and
@@ -114,7 +146,7 @@ module ActiveDoc
         if arg_attributes = args_with_vals[@name]
           if arg_attributes[:required] || arg_attributes[:defined]
             current_value       = arg_attributes[:val]
-            failed_expectations = @argument_expectations.find_all { |expectation| not expectation.fulfilled?(current_value) }
+            failed_expectations = @argument_expectations.find_all { |expectation| not expectation.fulfilled?(current_value, args_with_vals) }
             if self.conjunction == :and && !failed_expectations.empty? || self.conjunction == :or && (failed_expectations == @argument_expectations)
               raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_to_s }.join(",")}; got #{current_value.class}")
             end

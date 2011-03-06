@@ -113,7 +113,7 @@ The reason is to prevent from (perhaps mistakenly) passing unexpected option.
 ==== Describe by Proc:
 When passing proc taking an argument, this proc is used to validate value of this method argument.
 
- takes :number {|n| n != 0}
+ takes :number {|args| args[:number] != 0}
  def divide(number)
   ...
  end

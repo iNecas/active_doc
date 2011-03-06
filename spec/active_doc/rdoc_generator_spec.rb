@@ -8,6 +8,7 @@ describe ActiveDoc::RdocGenerator do
     takes :contact_name, String, :desc => "Name of person"
     takes :number, /^\d+$/, :desc => "Phone number"
     takes :sex, [:male, :female]
+    takes(:calls_counter) { |args| args[:calls_counter].respond_to? :succ }
     takes :options do
       takes :category, String, :desc => "Category of this contact"
     end
@@ -29,6 +30,7 @@ describe ActiveDoc::RdocGenerator do
 # * +contact_name+ :: (String) :: Name of person
 # * +number+ :: (/^\\\\d+$/) :: Phone number
 # * +sex+ :: ([:male, :female])
+# * +calls_counter+ :: (Complex Condition)
 # * +options+:
 #   * +:category+ :: (String) :: Category of this contact
 EXPECTED_OUTPUT
