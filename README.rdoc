@@ -1,6 +1,168 @@
 = ActiveDoc
 
-The main website is at http://github.com/necasik/active_doc
+DSL for code description. It allows to create 'executable documentation'.
+
+== Features
+
+* Describe code with code
+
+* Generate RDoc comments
+
+* DRY your documentation
+
+* Hash arguments description
+
+* Really up-to-date
+
+
+== Installation
+
+ gem install active_doc --pre
+ 
+To use rake task, put something like this to your Rakefile
+
+ require 'rubygems'
+ require 'bundler'
+ Bundler.setup
+ 
+ require 'active_doc/rake/task'
+ 
+ ActiveDoc::Rake::Task.new do 
+   # here you can put additional requirement files
+   require File.expand_path("lib/phone_book.rb", File.dirname(__FILE__))
+ end
+ 
+This adds task +active_doc+ to generate RDoc comments from ActiveDoc.
+
+== Usage
+
+To use ActiveDoc DSL in your class:
+ include ActiveDoc
+ 
+
+=== Method Arguments Description
+
+Validations based on descriptions are checked every time the method is called.
+
+When generating RDoc comments, the space between last argument description and method definition is used:
+
+ takes :name, String
+ # ==== Arguments:
+ # * +name+ :: (String)
+ def say_hallo_to(name)
+  ...
+ end
+
+<b>NOTICE: anything else in this space will be replaced.</b>
+
+==== Describe by Type:
+
+ takes :name, String
+ def say_hallo_to(name)
+  ...
+ end
+
+* Validation: :: Raises ArgumentError, when +name+ is not of type +String+
+
+* RDoc:
+ # ==== Arguments:
+ # * +name+ :: (String)
+ 
+==== Describe by Regexp:
+
+ takes :phone_number, /^[0-9]{9}$/
+ def call_to(phone_number)
+  ...
+ end
+
+* Validation: :: Raises ArgumentError, when regexp does not match +phone_number+
+
+* RDoc:
+ # ==== Arguments:
+ # * +phone_number+ :: (/^[0-9]{9}$/)
+ 
+==== Describe by Enumeration:
+
+ takes :position, [:start, :middle, :end]
+ def jump_to(position)
+  ...
+ end
+
+* Validation: :: Raises ArgumentError, when positions is not included in [:start, :middle, :end]
+
+* RDoc:
+ # ==== Arguments:
+ # * +position+ :: ([:start, :middle, :end])
+ 
+==== Describe Options Hash:
+
+ takes :options do
+   takes :format, [:csv, :ods, :xls]
+ end
+ def export(options)
+  ...
+ end
+
+* Validation: :: Raises ArgumentError, when:
+  * +options[:format]+ is not included in [:csv, :ods, :xls]
+  * +options+ contains a key not mentioned in argument description
+  
+This differs from describing method arguments, where argument description is optional. Here it's required.
+The reason is to prevent from (perhaps mistakenly) passing unexpected option.
+
+==== Describe by Proc:
+When passing proc taking an argument, this proc is used to validate value of this method argument.
+
+ takes :number {|n| n != 0}
+ def divide(number)
+  ...
+ end
+
+* Validation: :: Raises ArgumentError, unless proc.call(position)
+
+* RDoc:
+ # ==== Arguments:
+ # * +number+ :: (Complex Condition)
+
+=== Compatibility
+
+<b> 
+This version was tested on and should be compatible with Ruby 1.9.2.
+It uses some features introduced in Ruby 1.9.
+Compatibility with 1.8.7 to be fixed in future releases.
+</b>
+
+=== Usage Notice
+<b>
+Bear in mind: This gem is in early-stages of development and was not sufficiently tested in external projects.
+</b>
+
+=== Road Map
+
+* Support for 1.8.7
+* Combine argument expectations with AND and OR conjunctions
+* More types of descriptions (for modules, mixins...)
+
+=== Contribution
+
+Every bug report, bug fix, feature request or already implemented feature is welcome.
+
+To report a bug or request a feature, create an issue in Github.
+
+When contributing, please follow following instructions:
+
+* Write spec for your contribution. It ensures everything works in future.
+* Do not bother with Rakefile, version or history. It's OK to have your own, but if so, keep it in separated commit 
+to be easily ignored, when pulling.
+* Bonus points for topic branch.
+
+<b>
+NOTICE: I am quite new to open source development, so I appreciate every input from more experienced contributor.
+Contact me on e-mail.
+</b>
+
+
+
 
 == Copyright
 
