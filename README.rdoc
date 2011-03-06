@@ -110,6 +110,11 @@ When generating RDoc comments, the space between last argument description and m
 This differs from describing method arguments, where argument description is optional. Here it's required.
 The reason is to prevent from (perhaps mistakenly) passing unexpected option.
 
+* RDoc:
+ # ==== Arguments:
+ # * +options+:
+ #  * +:format+ :: ([:csv, :ods, :xls])
+
 ==== Describe by Proc:
 When passing proc taking an argument, this proc is used to validate value of this method argument.
 
