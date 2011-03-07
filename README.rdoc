@@ -8,13 +8,13 @@ DSL for code description. It allows to create 'executable documentation'.
    include ActiveDoc
    
    takes :to, /^[a-z.]+@[a-z.]+\.[a-z]+$/, :desc => "Receiver address"
-   def send(to)
+   def send_mail(to)
      #...
    end
  end
  
- Mailer.new.send("address@example.com") # => ok
- Mailer.new.send("fake.address.org") # => raises ArgumentError
+ Mailer.new.send_mail("address@example.com") # => ok
+ Mailer.new.send_mail("fake.address.org") # => raises ArgumentError
 
 == Features
 
