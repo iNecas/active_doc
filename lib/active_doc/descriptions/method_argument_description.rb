@@ -101,9 +101,9 @@ module ActiveDoc
           @possible_argument_expectations << subclass
         end
 
-        def self.find(argument, proc)
+        def self.find(argument, options, proc)
           @possible_argument_expectations.each do |expectation|
-            if suitable_expectation = expectation.from(argument, proc)
+            if suitable_expectation = expectation.from(argument, options, proc)
               return  suitable_expectation
             end
           end
@@ -145,7 +145,7 @@ module ActiveDoc
           @type.name
         end
 
-        def self.from(argument, proc)
+        def self.from(argument, options, proc)
           if argument.is_a?(Class) && proc.nil?
             self.new(argument)
           end
@@ -171,7 +171,7 @@ module ActiveDoc
           @regexp.inspect.gsub('\\') { '\\\\' }
         end
 
-        def self.from(argument, proc)
+        def self.from(argument, options, proc)
           if argument.is_a? Regexp
             self.new(argument)
           end
@@ -197,7 +197,7 @@ module ActiveDoc
           @array.inspect
         end
 
-        def self.from(argument, proc)
+        def self.from(argument, options, proc)
           if argument.is_a? Array
             self.new(argument)
           end
@@ -223,7 +223,7 @@ module ActiveDoc
           "Complex Condition"
         end
 
-        def self.from(argument, proc)
+        def self.from(argument, options, proc)
           if proc.is_a?(Proc) && proc.arity == 1
             self.new(proc)
           end
@@ -278,14 +278,44 @@ module ActiveDoc
           @hash_descriptions && @hash_descriptions.last && (@hash_descriptions.last.last_line + 1)
         end
 
-        def self.from(argument, proc)
+        def self.from(argument, options, proc)
           if proc.is_a?(Proc) && proc.arity == 0 && argument == Hash
             self.new(proc)
           end
         end
       end
 
-      
+      class DuckArgumentExpectation < ArgumentExpectation
+        def initialize(argument)
+          @respond_to = argument
+          @respond_to = [@respond_to] unless @respond_to.is_a? Array
+        end
+
+        def condition?(value, args_with_vals)
+          @failed_quacks = @respond_to.find_all {|quack| not value.respond_to? quack}
+          @failed_quacks.empty?
+        end
+
+        # Expected to...
+        # NOTE: Possible thread-safe problem
+        def expectation_fail_to_s
+          "be respond to #{@respond_to.inspect}, missing #{@failed_quacks.inspect}"
+        end
+
+        def to_rdoc
+          respond_to = @respond_to
+          respond_to = respond_to.first if respond_to.size == 1
+          "respond to #{respond_to.inspect}"
+        end
+
+        def self.from(argument, options, proc)
+          if options[:duck]
+            self.new(options[:duck])
+          end
+        end
+      end
+
+
       module Traceable
         def origin_file
           @origin.split(":").first
@@ -303,12 +333,10 @@ module ActiveDoc
       def initialize(name, argument_expectation, origin, options = {}, &block)
         @name, @origin, @description = name, origin, options[:desc]
         @argument_expectations = []
-        if argument_expectation || block
-          if found_expectation = ArgumentExpectation.find(argument_expectation, block)
-            @argument_expectations << found_expectation
-          else
-            raise "We haven't fount suitable argument expectations for given parameters"
-          end
+        if found_expectation = ArgumentExpectation.find(argument_expectation, options, block)
+          @argument_expectations << found_expectation
+        elsif block
+          raise "We haven't fount suitable argument expectations for given parameters"
         end
         
         if @argument_expectations.last.respond_to?(:last_line)

@@ -68,6 +68,20 @@ When generating RDoc comments, the space between last argument description and m
  # ==== Arguments:
  # * +name+ :: (String)
  
+==== Describe by Duck Type:
+
+ takes :name, :duck => :upcase
+ def say_hallo_to(name)
+  ...
+ end
+
+* Validation: :: Raises ArgumentError, when +name+ does not respond to +:upcase+
+
+* RDoc:
+ # ==== Arguments:
+ # * +name+ :: (respond to :upcase)
+ 
+ 
 ==== Describe by Regexp:
 
  takes :phone_number, /^[0-9]{9}$/

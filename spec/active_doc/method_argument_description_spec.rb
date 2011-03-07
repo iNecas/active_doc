@@ -300,7 +300,42 @@ RDOC
 RDOC
     end
   end
-  
-  
+
+  describe "duck typing argument expectation" do
+    let :subject_class do
+      Class.new do
+        include ActiveDoc
+        takes :collection, :duck => :each
+        takes :count, :duck => [:succ, :pred]
+        def sum(collection, count); end
+      end
+    end
+
+    describe "Validation" do
+      context "for valid value" do
+        subject { lambda { subject_class.new.sum([1,2,3], 2) } }
+
+        it { should_not raise_error ArgumentError }
+      end
+
+      context "for invalid value" do
+        subject { lambda { subject_class.new.sum(:s1_2_3, 2) } }
+
+        it { should raise_error ArgumentError }
+      end
+    end
+
+    describe "Rdoc comment" do
+      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :sum) }
+
+      it { should == <<RDOC }
+# ==== Attributes:
+# * +collection+ :: (respond to :each)
+# * +count+ :: (respond to [:succ, :pred])
+RDOC
+    end
+  end
+
+
 end
 
