@@ -1,4 +1,4 @@
-== 0.1.0.beta.5 (To be released)
+== 0.1.0
 
 === New features
 * Duck-typing - defining methods for argument to respond_to?
