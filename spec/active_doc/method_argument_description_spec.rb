@@ -97,39 +97,49 @@ describe ActiveDoc::Descriptions::MethodArgumentDescription do
     end
   end
   
-  context "with nested attributes" do
-    let :subject_object do
+  context "with nested description of hash" do
+    let :subject_class do
       Class.new do
         include ActiveDoc
-        takes :options do
+        takes :options, Hash do
           takes :conjunction, String
         end
         def join(options); end
-      end.new
+      end
     end
 
     context "when described key is not specified" do
-      subject { lambda { subject_object.join({})} }
+      subject { lambda { subject_class.new.join({})} }
       
       it { should_not raise_error ArgumentError }
     end
     
     context "when described key has wrong value" do
-      subject { lambda { subject_object.join(:conjunction => 2)} }
+      subject { lambda { subject_class.new.join(:conjunction => 2)} }
 
       it { should raise_error ArgumentError }
     end
 
     context "when described key has valid value" do
-      subject { lambda { subject_object.join(:conjunction => ",")} }
+      subject { lambda { subject_class.new.join(:conjunction => ",")} }
 
       it { should_not raise_error ArgumentError }
     end
 
     context "when undescribed key is given" do
-      subject { lambda { subject_object.join(:last_conjunction => "and")} }
+      subject { lambda { subject_class.new.join(:last_conjunction => "and")} }
 
       it { should raise_error ArgumentError }
+    end
+
+    describe "Rdoc comment" do
+      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join) }
+
+      it { should == <<RDOC }
+# ==== Attributes:
+# * +options+ :: (Hash):
+#   * +:conjunction+ :: (String)
+RDOC
     end
   end
   

@@ -20,13 +20,13 @@ class PhoneNumber
 
   takes :contact_name, String, :desc => "Name of person"
   takes :number, /^\\d+$/, :desc => "Phone number"
-  takes :options do
+  takes :options, Hash do
     takes :category, String, :desc => "Category of this contact"
   end
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
 # * +number+ :: (/^\\\\d+$/) :: Phone number
-# * +options+:
+# * +options+ :: (Hash):
 #   * +:category+ :: (String) :: Category of this contact
   def initialize(contact_name, number, options = {})
     
@@ -47,7 +47,7 @@ class PhoneBook
 # ==== Attributes:
 # * +contact_name+ :: (String) :: Name of person
 # * +number+ :: (/^\\\\d+$/) :: Phone number
-# * +options+:
+# * +options+ :: (Hash):
 #   * +:category+ :: (String) :: Category of this contact
   def add(contact_name, number, options = {})
     @numbers << PhoneNumber.new(contact_name, number, options)

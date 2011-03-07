@@ -33,12 +33,12 @@ module ActiveDoc
         # value of +add+ =~ /[0-9]{6}/.
         # 
         # === Nesting:
-        # Takes can take a block, that allows additional description of argument using the same DSL.
-        # Currently, it's used to describe Hash options.
+        # When describing Hash, it can take a block, that allows additional description of argument 
+        # using the same DSL.
         #
         # ==== Example:
         #
-        #  takes :options do
+        #  takes :options, Hash do
         #    takes :category, String
         #  end
         #  def add(number, options)
@@ -57,7 +57,7 @@ module ActiveDoc
         #
         #  takes :contact_name, String, :desc => "Last name of contact person"
         #  takes :number, /[0-9]{6}/
-        #  takes :options do
+        #  takes :options, Hash do
         #    takes :category, String
         #  end
         #  # this comment was there before
@@ -69,7 +69,7 @@ module ActiveDoc
         #
         #  takes :contact_name, String, :desc => "Last name of contact person"
         #  takes :number, /[0-9]{6}/
-        #  takes :options do
+        #  takes :options, Hash do
         #    takes :category, String
         #  end
         #  # ==== Arguments:
@@ -101,9 +101,9 @@ module ActiveDoc
           @possible_argument_expectations << subclass
         end
 
-        def self.find(argument)
+        def self.find(argument, proc)
           @possible_argument_expectations.each do |expectation|
-            if suitable_expectation = expectation.from(argument)
+            if suitable_expectation = expectation.from(argument, proc)
               return  suitable_expectation
             end
           end
@@ -145,8 +145,8 @@ module ActiveDoc
           @type.name
         end
 
-        def self.from(argument)
-          if argument.is_a? Class
+        def self.from(argument, proc)
+          if argument.is_a?(Class) && proc.nil?
             self.new(argument)
           end
         end
@@ -171,7 +171,7 @@ module ActiveDoc
           @regexp.inspect.gsub('\\') { '\\\\' }
         end
 
-        def self.from(argument)
+        def self.from(argument, proc)
           if argument.is_a? Regexp
             self.new(argument)
           end
@@ -197,7 +197,7 @@ module ActiveDoc
           @array.inspect
         end
 
-        def self.from(argument)
+        def self.from(argument, proc)
           if argument.is_a? Array
             self.new(argument)
           end
@@ -223,9 +223,9 @@ module ActiveDoc
           "Complex Condition"
         end
 
-        def self.from(argument)
-          if argument.is_a?(Proc) && argument.arity == 1
-            self.new(argument)
+        def self.from(argument, proc)
+          if proc.is_a?(Proc) && proc.arity == 1
+            self.new(proc)
           end
         end
       end
@@ -263,7 +263,7 @@ module ActiveDoc
         end
 
         def to_rdoc
-          return nil
+          return "Hash"
         end
 
         def additional_rdoc
@@ -278,9 +278,9 @@ module ActiveDoc
           @hash_descriptions && @hash_descriptions.last && (@hash_descriptions.last.last_line + 1)
         end
 
-        def self.from(argument)
-          if argument.is_a?(Proc) && argument.arity == 0
-            self.new(argument)
+        def self.from(argument, proc)
+          if proc.is_a?(Proc) && proc.arity == 0 && argument == Hash
+            self.new(proc)
           end
         end
       end
@@ -303,16 +303,16 @@ module ActiveDoc
       def initialize(name, argument_expectation, origin, options = {}, &block)
         @name, @origin, @description = name, origin, options[:desc]
         @argument_expectations = []
-        @argument_expectations << ArgumentExpectation.find(argument_expectation) if argument_expectation
-        if block
-          case block.arity
-            when 0
-              @argument_expectations << ArgumentExpectation.find(block)
-              @last_line = @argument_expectations.last.last_line || @last_line
-            when 1
-              @argument_expectations << ArgumentExpectation.find(block)
-            else raise "Unexpected arity of given block"
+        if argument_expectation || block
+          if found_expectation = ArgumentExpectation.find(argument_expectation, block)
+            @argument_expectations << found_expectation
+          else
+            raise "We haven't fount suitable argument expectations for given parameters"
           end
+        end
+        
+        if @argument_expectations.last.respond_to?(:last_line)
+          @last_line = @argument_expectations.last.last_line
         end
       end
 

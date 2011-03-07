@@ -96,7 +96,7 @@ When generating RDoc comments, the space between last argument description and m
  
 ==== Describe Options Hash:
 
- takes :options do
+ takes :options, Hash do
    takes :format, [:csv, :ods, :xls]
  end
  def export(options)
