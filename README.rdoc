@@ -2,6 +2,20 @@
 
 DSL for code description. It allows to create 'executable documentation'.
 
+== Synopsis
+
+ class Mailer
+   include ActiveDoc
+   
+   takes :to, /^[a-z.]+@[a-z.]+\.[a-z]+$/, :desc => "Receiver address"
+   def send(to)
+     #...
+   end
+ end
+ 
+ Mailer.new.send("address@example.com") # => ok
+ Mailer.new.send("fake.address.org") # => raises ArgumentError
+
 == Features
 
 * Describe code with code
@@ -18,7 +32,7 @@ DSL for code description. It allows to create 'executable documentation'.
 == Installation
 
  gem install active_doc --pre
- 
+
 To use rake task, put something like this to your Rakefile
 
  require 'rubygems'
@@ -38,7 +52,7 @@ This adds task +active_doc+ to generate RDoc comments from ActiveDoc.
 
 To use ActiveDoc DSL in your class:
  include ActiveDoc
- 
+
 
 === Method Arguments Description
 
@@ -80,8 +94,7 @@ When generating RDoc comments, the space between last argument description and m
 * RDoc:
  # ==== Arguments:
  # * +name+ :: (respond to :upcase)
- 
- 
+
 ==== Describe by Regexp:
 
  takes :phone_number, /^[0-9]{9}$/
@@ -94,7 +107,7 @@ When generating RDoc comments, the space between last argument description and m
 * RDoc:
  # ==== Arguments:
  # * +phone_number+ :: (/^[0-9]{9}$/)
- 
+
 ==== Describe by Enumeration:
 
  takes :position, [:start, :middle, :end]
@@ -107,7 +120,7 @@ When generating RDoc comments, the space between last argument description and m
 * RDoc:
  # ==== Arguments:
  # * +position+ :: ([:start, :middle, :end])
- 
+
 ==== Describe Options Hash:
 
  takes :options, Hash do
@@ -120,7 +133,7 @@ When generating RDoc comments, the space between last argument description and m
 * Validation: :: Raises ArgumentError, when:
   * +options[:format]+ is not included in [:csv, :ods, :xls]
   * +options+ contains a key not mentioned in argument description
-  
+
 This differs from describing method arguments, where argument description is optional. Here it's required.
 The reason is to prevent from (perhaps mistakenly) passing unexpected option.
 
