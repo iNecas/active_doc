@@ -31,7 +31,7 @@ DSL for code description. It allows to create 'executable documentation'.
 
 == Installation
 
- gem install active_doc --pre
+ gem install active_doc
 
 To use rake task, put something like this to your Rakefile
 
