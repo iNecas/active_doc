@@ -1,6 +1,7 @@
 = ActiveDoc
 
-DSL for code description. It allows to create 'executable documentation'.
+DSL for code description. It allows to create 'executable documentation' and
+to design by contract.
 
 == Synopsis
 
