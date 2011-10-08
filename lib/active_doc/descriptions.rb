@@ -1,1 +1,1 @@
-require 'active_doc/descriptions/method_argument_description'
+require 'active_doc/descriptions/argument_description'

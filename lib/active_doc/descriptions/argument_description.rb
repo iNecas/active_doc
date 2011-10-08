@@ -1,6 +1,6 @@
 module ActiveDoc
   module Descriptions
-    class MethodArgumentDescription
+    class ArgumentDescription
       module Dsl
         # Describes method argument.
         #
@@ -93,9 +93,9 @@ module ActiveDoc
             options = args.pop || {}
 
             if ref_string = options[:ref]
-              description = ActiveDoc::Descriptions::MethodArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block)
+              description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block)
             else
-              description = ActiveDoc::Descriptions::MethodArgumentDescription.new(name, argument_expectation, caller.first, options, &block)
+              description = ActiveDoc::Descriptions::ArgumentDescription.new(name, argument_expectation, caller.first, options, &block)
             end
             ActiveDoc.register_description(klass, method_name, description)
 
@@ -267,9 +267,9 @@ module ActiveDoc
           options = args.pop || {}
 
           if ref_string = options[:ref]
-            description = ActiveDoc::Descriptions::MethodArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block)
+            description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block)
           else
-            description = ActiveDoc::Descriptions::MethodArgumentDescription.new(name, argument_expectation, caller.first, options, &block)
+            description = ActiveDoc::Descriptions::ArgumentDescription.new(name, argument_expectation, caller.first, options, &block)
           end
           @hash_descriptions << description
         end
@@ -423,7 +423,7 @@ module ActiveDoc
         " :: #{@description}" if @description
       end
 
-      class Reference < MethodArgumentDescription
+      class Reference < ArgumentDescription
         include Traceable
         def initialize(name, target_description, origin, options)
           @name = name
@@ -458,4 +458,4 @@ module ActiveDoc
     end
   end
 end
-ActiveDoc::Dsl.send(:include, ActiveDoc::Descriptions::MethodArgumentDescription::Dsl)
+ActiveDoc::Dsl.send(:include, ActiveDoc::Descriptions::ArgumentDescription::Dsl)

@@ -35,7 +35,7 @@ class PhoneBook
   end
 end
 
-describe ActiveDoc::Descriptions::MethodArgumentDescription do
+describe ActiveDoc::Descriptions::ArgumentDescription do
   describe "more described methods" do
     subject { PhoneBook.new("Peter Smith") }
     context "instance method" do
