@@ -1,1 +1,1 @@
-require 'active_doc/descriptions/argument_description'
+load 'active_doc/descriptions/argument_description.rb'

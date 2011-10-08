@@ -2,6 +2,14 @@ module ActiveDoc
   module Descriptions
     class ArgumentDescription
       module Dsl
+        include ActiveDoc
+
+        class << self
+          def method_missing(method, *args)
+            return if method == :takes && ActiveDoc.preloading?
+            super
+          end
+        end
         # Describes method argument.
         #
         # ==== Attributes:
@@ -80,6 +88,8 @@ module ActiveDoc
         #  def add(contact_name, number, options)
         #    ...
         #  end
+
+        takes :name, Symbol, :desc => "Name of the described argument"
         def takes(name, *args, &block)
           ActiveDoc.description_target = nil
 
@@ -103,26 +113,43 @@ module ActiveDoc
       module DescriptionTarget
 
         class Method
+          include ActiveDoc
+          takes :method, UnboundMethod
           def initialize(method)
             @method = method
           end
 
+          takes :column_name, Symbol
           def find_value(column_name, *args)
             arg_index = @method.parameters.find_index { |(_, name)| name == column_name }
             required = @method.parameters[arg_index].first != :opt
             {:val => args[arg_index], :required => required, :defined => (arg_index < args.size)}
           end
+
+          def to_s
+            "#{@method.owner} #{@method.source_location.first}"
+          end
         end
 
         class Hash
+          include ActiveDoc
+
+          takes :name, Symbol
+          takes :hash, ::Hash
           def find_value(name, hash)
             {:val => hash[name], :defined => hash.has_key?(name)}
+          end
+
+          def to_s
+            "Hash"
           end
         end
 
       end
 
       class ArgumentExpectation
+        include ActiveDoc
+
         def self.inherited(subclass)
           @possible_argument_expectations ||= []
           @possible_argument_expectations << subclass
@@ -155,6 +182,8 @@ module ActiveDoc
       end
 
       class TypeArgumentExpectation < ArgumentExpectation
+
+        takes :argument, [Class, Module]
         def initialize(argument)
           @type = argument
         end
@@ -211,7 +240,7 @@ module ActiveDoc
         end
 
         def condition?(value)
-          @array.include?(value)
+          @array.find {|expected| expected === value }
         end
 
         # Expected to...
@@ -387,16 +416,22 @@ module ActiveDoc
       end
 
       def validate(*args)
-        if argument = @description_target.find_value(@name, *args)
-          if argument[:required] || argument[:defined]
-            current_value       = argument[:val]
-            failed_expectations = @argument_expectations.find_all { |expectation| not expectation.fulfilled?(current_value) }
-            if !failed_expectations.empty?
-              raise ArgumentError.new("Wrong value for argument '#{@name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_fail_to_s }.join(",")}")
+        return if @already_validating
+        begin
+          @already_validating = true
+          if argument = @description_target.find_value(@name, *args)
+            if argument[:required] || argument[:defined]
+              current_value       = argument[:val]
+              failed_expectations = @argument_expectations.find_all { |expectation| not expectation.fulfilled?(current_value) }
+              if !failed_expectations.empty?
+                raise ArgumentError.new("#{@description_target}: Wrong value for argument '#{@name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_fail_to_s }.join(",")}")
+              end
             end
+          else
+            raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{@name}'")
           end
-        else
-          raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{@name}'")
+        ensure
+          @already_validating = false
         end
         return @name
       end
