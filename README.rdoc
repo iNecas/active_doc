@@ -7,13 +7,13 @@ to design by contract.
 
  class Mailer
    include ActiveDoc
-   
+
    takes :to, /^[a-z.]+@[a-z.]+\.[a-z]+$/, :desc => "Receiver address"
    def send_mail(to)
      #...
    end
  end
- 
+
  Mailer.new.send_mail("address@example.com") # => ok
  Mailer.new.send_mail("fake.address.org") # => raises ArgumentError
 
@@ -42,14 +42,14 @@ To use rake task, put something like this to your Rakefile
  require 'rubygems'
  require 'bundler'
  Bundler.setup
- 
+
  require 'active_doc/rake/task'
- 
+
  ActiveDoc::Rake::Task.new do 
    # here you can put additional requirement files
    require File.expand_path("lib/phone_book.rb", File.dirname(__FILE__))
  end
- 
+
 This adds task +active_doc+ to generate RDoc comments from ActiveDoc.
 
 == Usage
@@ -85,7 +85,7 @@ When generating RDoc comments, the space between last argument description and m
 * RDoc:
  # ==== Arguments:
  # * +name+ :: (String)
- 
+
 ==== Describe by Duck Type:
 
  takes :name, :duck => :upcase

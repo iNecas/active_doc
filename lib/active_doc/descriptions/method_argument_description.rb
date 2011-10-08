@@ -137,13 +137,13 @@ module ActiveDoc
             return false
           end
         end
-        
+
         # to be inserted after argument description in rdoc
         def additional_rdoc
           return nil
         end
       end
-      
+
       class TypeArgumentExpectation < ArgumentExpectation
         def initialize(argument)
           @type = argument
@@ -220,7 +220,7 @@ module ActiveDoc
           end
         end
       end
-      
+
       class ComplexConditionArgumentExpectation < ArgumentExpectation
         def initialize(argument)
           @proc = argument
@@ -246,7 +246,7 @@ module ActiveDoc
           end
         end
       end
-      
+
       class OptionsHashArgumentExpectation < ArgumentExpectation
         def initialize(argument)
           @proc = argument
@@ -305,7 +305,7 @@ module ActiveDoc
             ret
           end
         end
-        
+
         def last_line
           @hash_descriptions && @hash_descriptions.last && (@hash_descriptions.last.last_line + 1)
         end
@@ -352,12 +352,12 @@ module ActiveDoc
         def origin_file
           @origin.split(":").first
         end
-        
+
         def origin_line
           @origin.split(":")[1].to_i
         end
       end
-      
+
       attr_reader :name, :origin_file
       attr_accessor :conjunction
       include Traceable
@@ -370,7 +370,7 @@ module ActiveDoc
         elsif block
           raise "We haven't fount suitable argument expectations for given parameters"
         end
-        
+
         if @argument_expectations.last.respond_to?(:last_line)
           @last_line = @argument_expectations.last.last_line
         end
@@ -411,7 +411,7 @@ module ActiveDoc
         expectations_rdocs = @argument_expectations.map { |x| x.to_rdoc }.compact
         " :: (#{expectations_rdocs.join(", ")})" unless expectations_rdocs.empty?
       end
-      
+
       def expectations_to_additional_rdoc
         @argument_expectations.map { |argument_expectation| argument_expectation.additional_rdoc }.compact.join
       end
@@ -429,18 +429,18 @@ module ActiveDoc
           @method = @method.to_sym
           @origin = origin
         end
-        
+
         def validate(*args)
           # we validate only in target method
           return @name
         end
-        
+
         def to_rdoc(*args)
             referenced_argument_description.to_rdoc
         end
-        
+
         private
-        
+
         def referenced_argument_description
           if referenced_described_method = ActiveDoc.documented_method(@klass, @method)
             if referenced_argument_description = referenced_described_method.descriptions.find { |description| description.name == @name }

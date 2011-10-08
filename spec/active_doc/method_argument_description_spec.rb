@@ -2,7 +2,7 @@ require 'spec_helper'
 class PhoneBook
   include ActiveDoc
   attr_accessor :owner
-  
+
   def initialize(owner)
     @numbers = []
     PhoneBook.register(self)
@@ -17,7 +17,7 @@ class PhoneBook
   def self.find_for_owner(owner)
     @phone_books && @phone_books[owner]
   end
-  
+
   class << self
     takes :phone_book, PhoneBook
     def register(phone_book)
@@ -80,7 +80,7 @@ describe ActiveDoc::Descriptions::MethodArgumentDescription do
       end
     end
   end
-  
+
   context "for description of optional parameter" do
     subject do
       Class.new do
@@ -89,14 +89,14 @@ describe ActiveDoc::Descriptions::MethodArgumentDescription do
         def join(conjunction = ","); end
       end.new
     end
-    
+
     it "validates only when argument is given" do
       lambda{ subject.join }.should_not raise_error ArgumentError
       lambda{ subject.join(";") }.should_not raise_error ArgumentError
       lambda{ subject.join(2) }.should raise_error ArgumentError
     end
   end
-  
+
   context "with nested description of hash" do
     let :subject_class do
       Class.new do
@@ -110,10 +110,10 @@ describe ActiveDoc::Descriptions::MethodArgumentDescription do
 
     context "when described key is not specified" do
       subject { lambda { subject_class.new.join({})} }
-      
+
       it { should_not raise_error ArgumentError }
     end
-    
+
     context "when described key has wrong value" do
       subject { lambda { subject_class.new.join(:conjunction => 2)} }
 
@@ -142,7 +142,7 @@ describe ActiveDoc::Descriptions::MethodArgumentDescription do
 RDOC
     end
   end
-  
+
   describe "none expectation specified" do
     let :subject_class do
       Class.new do
@@ -167,7 +167,7 @@ RDOC
 RDOC
     end
   end
-  
+
   describe "type argument expectation" do
     let :subject_class do
       Class.new do
@@ -176,24 +176,24 @@ RDOC
         def join(conjunction); end
       end
     end
-    
+
     describe "Validation" do
       context "for valid value" do
         subject { lambda { subject_class.new.join(";") } }
-        
+
         it { should_not raise_error ArgumentError }
       end
-      
+
       context "for invalid value" do
         subject { lambda { subject_class.new.join(1) } }
 
         it { should raise_error ArgumentError }
       end
     end
-    
+
     describe "Rdoc comment" do
       subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join)}
-      
+
       it { should == <<RDOC }
 # ==== Attributes:
 # * +conjunction+ :: (String)
@@ -233,7 +233,7 @@ RDOC
 RDOC
     end
   end
-  
+
   describe "array argument expectation" do
     let :subject_class do
       Class.new do
@@ -266,8 +266,8 @@ RDOC
 RDOC
     end
   end
-  
-  
+
+
   describe "complex condition argument expectation" do
     let :subject_class do
       Class.new do
