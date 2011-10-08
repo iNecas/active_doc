@@ -6,13 +6,13 @@ module ActiveDoc
       @origin_file, @origin_line = origin.split(":")
       @origin_line = @origin_line.to_i
     end
-    
+
     def to_rdoc
       rdoc_lines = descriptions.map {|x| x.to_rdoc.lines.map{ |l| "# #{l.chomp}" }}.flatten
       rdoc_lines.unshift("# ==== Attributes:")
       return rdoc_lines.join("\n") << "\n"
     end
-    
+
     def write_rdoc(offset)
       File.open(@origin_file, "r+") do |f|
         lines = f.readlines
@@ -28,11 +28,11 @@ module ActiveDoc
       end
       return offset
     end
-    
+
     protected
     def rdoc_space_range(offset)
       (descriptions.last.last_line + offset)...(@origin_line + offset-1)
     end
-    
+
   end
 end
