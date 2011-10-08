@@ -81,10 +81,9 @@ module ActiveDoc
         #    ...
         #  end
         def takes(name, *args, &block)
-          ActiveDoc.described_method = nil
+          ActiveDoc.description_target = nil
           Decorate.decorate do |klass, method_name|
-            ActiveDoc.described_method ||= klass.instance_method(method_name)
-            method = ActiveDoc.described_method
+            ActiveDoc.description_target ||= DescriptionTarget::Method.new(klass.instance_method(method_name))
             if args.size > 1 || !args.first.is_a?(Hash)
               argument_expectation = args.shift || nil
             else
@@ -92,12 +91,10 @@ module ActiveDoc
             end
             options = args.pop || {}
 
-            description_target = DescriptionTarget::Method.new(method)
-
             if ref_string = options[:ref]
-              description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, description_target, ref_string, caller.first, options, &block)
+              description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, ActiveDoc.description_target, ref_string, caller.first, options, &block)
             else
-              description = ActiveDoc::Descriptions::ArgumentDescription.new(name, description_target, argument_expectation, caller.first, options, &block)
+              description = ActiveDoc::Descriptions::ArgumentDescription.new(name, ActiveDoc.description_target, argument_expectation, caller.first, options, &block)
             end
             ActiveDoc.register_description(klass, method_name, description)
 

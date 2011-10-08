@@ -14,12 +14,12 @@ module ActiveDoc
 
   class << self
 
-    def described_method
-      Thread.current[:active_doc_method]
+    def description_target
+      Thread.current[:active_doc_description_target]
     end
 
-    def described_method=(method)
-      Thread.current[:active_doc_method] = method
+    def description_target=(description_target)
+      Thread.current[:active_doc_description_target] = description_target
     end
 
     def prepare_descriptions
