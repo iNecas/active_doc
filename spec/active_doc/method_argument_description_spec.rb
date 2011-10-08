@@ -272,7 +272,7 @@ RDOC
     let :subject_class do
       Class.new do
         include ActiveDoc
-        takes(:number){|args| args[:number] != 0 }
+        takes(:number){|value| value != 0 }
         def divide(number) ; end
       end
     end

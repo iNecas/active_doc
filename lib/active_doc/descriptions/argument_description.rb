@@ -92,10 +92,12 @@ module ActiveDoc
             end
             options = args.pop || {}
 
+            description_target = DescriptionTarget::Method.new(method)
+
             if ref_string = options[:ref]
-              description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block)
+              description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, description_target, ref_string, caller.first, options, &block)
             else
-              description = ActiveDoc::Descriptions::ArgumentDescription.new(name, argument_expectation, caller.first, options, &block)
+              description = ActiveDoc::Descriptions::ArgumentDescription.new(name, description_target, argument_expectation, caller.first, options, &block)
             end
             ActiveDoc.register_description(klass, method_name, description)
 
@@ -103,16 +105,34 @@ module ActiveDoc
             wrapped_method_name = Decorate.create_alias(klass, method_name, decorator_name)
 
             klass.send(:define_method, method_name) do |*call_args, &call_block|
-              args_with_vals = {}
-              method.parameters.each_with_index do |(arg, name), i|
-                args_with_vals[name] = {:val => call_args[i], :required => (arg != :opt), :defined => (i < call_args.size)}
-              end
-              description.validate(args_with_vals)
+              description.validate(*call_args)
               call = Decorate::AroundCall.new(self, method_name.to_sym, wrapped_method_name.to_sym, call_args, call_block)
               call.yield
             end
           end
         end
+      end
+
+      module DescriptionTarget
+
+        class Method
+          def initialize(method)
+            @method = method
+          end
+
+          def find_value(column_name, *args)
+            arg_index = @method.parameters.find_index { |(_, name)| name == column_name }
+            required = @method.parameters[arg_index].first != :opt
+            {:val => args[arg_index], :required => required, :defined => (arg_index < args.size)}
+          end
+        end
+
+        class Hash
+          def find_value(name, hash)
+            {:val => hash[name], :defined => hash.has_key?(name)}
+          end
+        end
+
       end
 
       class ArgumentExpectation
@@ -131,8 +151,8 @@ module ActiveDoc
         end
 
 
-        def fulfilled?(value, args_with_vals)
-          if self.condition?(value, args_with_vals)
+        def fulfilled?(value)
+          if self.condition?(value)
             @failed_value = nil
             return true
           else
@@ -152,7 +172,7 @@ module ActiveDoc
           @type = argument
         end
 
-        def condition?(value, args_with_vals)
+        def condition?(value)
           value.is_a? @type
         end
 
@@ -177,7 +197,7 @@ module ActiveDoc
           @regexp = argument
         end
 
-        def condition?(value, args_with_vals)
+        def condition?(value)
           value =~ @regexp
         end
 
@@ -203,7 +223,7 @@ module ActiveDoc
           @array = argument
         end
 
-        def condition?(value, args_with_vals)
+        def condition?(value)
           @array.include?(value)
         end
 
@@ -229,9 +249,8 @@ module ActiveDoc
           @proc = argument
         end
 
-        def condition?(value, args_with_vals)
-          other_values = args_with_vals.inject({}) { |h, (k, v)| h[k] = v[:val];h }
-          @proc.call(other_values)
+        def condition?(value)
+          @proc.call(value)
         end
 
         # Expected to...
@@ -266,23 +285,21 @@ module ActiveDoc
           end
           options = args.pop || {}
 
+          description_target = DescriptionTarget::Hash.new
+
           if ref_string = options[:ref]
-            description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block)
+            description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, description_target, ref_string, caller.first, options, &block)
           else
-            description = ActiveDoc::Descriptions::ArgumentDescription.new(name, argument_expectation, caller.first, options, &block)
+            description = ActiveDoc::Descriptions::ArgumentDescription.new(name, description_target, argument_expectation, caller.first, options, &block)
           end
           @hash_descriptions << description
         end
 
-        def condition?(value, args_with_vals)
+        def condition?(value)
           if @hash_descriptions
             raise "Only hash is supported for nested argument documentation" unless value.is_a? Hash
-            hash_args_with_vals = value.inject(Hash.new{|h,k| h[k] = {:defined => false}}) do |hash, (key,val)|
-              hash[key] = {:val => val, :defined => true}
-              hash
-            end
             described_keys   = @hash_descriptions.map do |hash_description|
-              hash_description.validate(hash_args_with_vals)
+              hash_description.validate(value)
             end
             undescribed_keys = value.keys - described_keys
             unless undescribed_keys.empty?
@@ -326,7 +343,7 @@ module ActiveDoc
           @respond_to = [@respond_to] unless @respond_to.is_a? Array
         end
 
-        def condition?(value, args_with_vals)
+        def condition?(value)
           @failed_quacks = @respond_to.find_all {|quack| not value.respond_to? quack}
           @failed_quacks.empty?
         end
@@ -365,8 +382,9 @@ module ActiveDoc
       attr_accessor :conjunction
       include Traceable
 
-      def initialize(name, argument_expectation, origin, options = {}, &block)
+      def initialize(name, description_target, argument_expectation, origin, options = {}, &block)
         @name, @origin, @description = name, origin, options[:desc]
+        @description_target = description_target
         @argument_expectations = []
         if found_expectation = ArgumentExpectation.find(argument_expectation, options, block)
           @argument_expectations << found_expectation
@@ -379,20 +397,19 @@ module ActiveDoc
         end
       end
 
-      def validate(args_with_vals)
-        argument_name = @name
-        if arg_attributes = args_with_vals[@name]
-          if arg_attributes[:required] || arg_attributes[:defined]
-            current_value       = arg_attributes[:val]
-            failed_expectations = @argument_expectations.find_all { |expectation| not expectation.fulfilled?(current_value, args_with_vals) }
+      def validate(*args)
+        if argument = @description_target.find_value(@name, *args)
+          if argument[:required] || argument[:defined]
+            current_value       = argument[:val]
+            failed_expectations = @argument_expectations.find_all { |expectation| not expectation.fulfilled?(current_value) }
             if !failed_expectations.empty?
-              raise ArgumentError.new("Wrong value for argument '#{argument_name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_fail_to_s }.join(",")}")
+              raise ArgumentError.new("Wrong value for argument '#{@name}'. Expected to #{failed_expectations.map { |expectation| expectation.expectation_fail_to_s }.join(",")}")
             end
           end
         else
-          raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{argument_name}'")
+          raise ArgumentError.new("Inconsistent method definition with active doc. Method was expected to have argument '#{@name}'")
         end
-        return argument_name
+        return @name
       end
 
       def to_rdoc(hash = false)
@@ -425,9 +442,9 @@ module ActiveDoc
 
       class Reference < ArgumentDescription
         include Traceable
-        def initialize(name, target_description, origin, options)
+        def initialize(name, description_target, ref_string, origin, options)
           @name = name
-          @klass, @method = target_description.split("#")
+          @klass, @method = ref_string.split("#")
           @klass = Object.const_get(@klass)
           @method = @method.to_sym
           @origin = origin
