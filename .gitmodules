@@ -1,0 +1,3 @@
+[submodule "vendor/decorate"]
+	path = vendor/decorate
+	url = https://github.com/iNecas/decorate.git
