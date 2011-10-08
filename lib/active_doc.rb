@@ -14,6 +14,15 @@ module ActiveDoc
 
   class << self
 
+    def perform_validation?
+      @perform_validation = true if @perform_validation.nil?
+      @perform_validation
+    end
+
+    def perform_validation=(value)
+      @perform_validation = value
+    end
+
     def description_target
       Thread.current[:active_doc_description_target]
     end

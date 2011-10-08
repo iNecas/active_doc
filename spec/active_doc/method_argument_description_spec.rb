@@ -58,6 +58,15 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
           lambda { subject.size }.should_not raise_error ArgumentError
         end
       end
+
+      context "with validation turned off" do
+        before { ActiveDoc.perform_validation = false }
+        after  { ActiveDoc.perform_validation = true }
+
+        it "does not run validations" do
+          lambda { subject.add(:catty_smith, "123456") }.should_not raise_error ArgumentError
+        end
+      end
     end
 
     context "class method" do

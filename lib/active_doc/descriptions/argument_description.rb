@@ -92,7 +92,7 @@ module ActiveDoc
             wrapped_method_name = Decorate.create_alias(klass, method_name, decorator_name)
 
             klass.send(:define_method, method_name) do |*call_args, &call_block|
-              description.validate(*call_args)
+              description.validate(*call_args) if ActiveDoc.perform_validation?
               call = Decorate::AroundCall.new(self, method_name.to_sym, wrapped_method_name.to_sym, call_args, call_block)
               call.yield
             end
