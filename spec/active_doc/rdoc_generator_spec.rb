@@ -11,10 +11,11 @@ describe ActiveDoc::RdocGenerator do
     File.open(documented_class_path, "w") { |f| f << @original_documented_class }
   end
 
-  it "writes generated rdoc to file" do
+  it "writes generated rdoc to temporary file" do
+    pending "need to be rewritten - current state, when it affects the current file is not good"
     ActiveDoc::RdocGenerator.write_rdoc(documented_class_path)
     documented_class = File.read(documented_class_path)
-    documented_class.should == <<RUBY.chomp
+    documented_class.chomp.should == <<RUBY.chomp
 class PhoneNumber
   include ActiveDoc
 

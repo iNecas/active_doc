@@ -81,16 +81,33 @@ module ActiveDoc
         #    ...
         #  end
         def takes(name, *args, &block)
-          if args.size > 1 || !args.first.is_a?(Hash)
-            argument_expectation = args.shift || nil
-          else
-            argument_expectation = nil
-          end
-          options = args.pop || {}
-          if ref_string = options[:ref]
-            ActiveDoc.register_description(ActiveDoc::Descriptions::MethodArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block))
-          else
-            ActiveDoc.register_description(ActiveDoc::Descriptions::MethodArgumentDescription.new(name, argument_expectation, caller.first, options, &block))
+          ActiveDoc.described_method = nil
+          Decorate.decorate do |klass, method_name|
+            decorator_name = :takes
+            wrapped_method_name = Decorate.create_alias(klass, method_name, decorator_name)
+            if args.size > 1 || !args.first.is_a?(Hash)
+              argument_expectation = args.shift || nil
+            else
+              argument_expectation = nil
+            end
+            options = args.pop || {}
+
+            if ref_string = options[:ref]
+              description = ActiveDoc::Descriptions::MethodArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block)
+            else
+              description = ActiveDoc::Descriptions::MethodArgumentDescription.new(name, argument_expectation, caller.first, options, &block)
+            end
+            ActiveDoc.register_description(klass, method_name, description)
+            args_with_vals = {}
+            ActiveDoc.described_method ||= klass.instance_method(method_name)
+            method = ActiveDoc.described_method
+
+            klass.send(:define_method, method_name) do |*call_args, &call_block|
+              method.parameters.each_with_index { |(arg, name), i| args_with_vals[name] = {:val => call_args[i], :required => (arg != :opt), :defined => (i < call_args.size)}  }
+              description.validate(args_with_vals)
+              call = Decorate::AroundCall.new(self, method_name.to_sym, wrapped_method_name.to_sym, call_args, call_block)
+              call.yield
+            end
           end
         end
       end
@@ -233,10 +250,25 @@ module ActiveDoc
       class OptionsHashArgumentExpectation < ArgumentExpectation
         def initialize(argument)
           @proc = argument
+          @hash_descriptions = []
 
-          @hash_descriptions = ActiveDoc.nested_descriptions do
-            Class.new.extend(Dsl).class_exec(&@proc)
+          self.instance_exec(&@proc)
+        end
+
+        def takes(name, *args, &block)
+          if args.size > 1 || !args.first.is_a?(Hash)
+            argument_expectation = args.shift || nil
+          else
+            argument_expectation = nil
           end
+          options = args.pop || {}
+
+          if ref_string = options[:ref]
+            description = ActiveDoc::Descriptions::MethodArgumentDescription::Reference.new(name, ref_string, caller.first, options, &block)
+          else
+            description = ActiveDoc::Descriptions::MethodArgumentDescription.new(name, argument_expectation, caller.first, options, &block)
+          end
+          @hash_descriptions << description
         end
 
         def condition?(value, args_with_vals)
@@ -278,9 +310,9 @@ module ActiveDoc
           @hash_descriptions && @hash_descriptions.last && (@hash_descriptions.last.last_line + 1)
         end
 
-        def self.from(argument, options, proc)
-          if proc.is_a?(Proc) && proc.arity == 0 && argument == Hash
-            self.new(proc)
+        def self.from(argument, options, block)
+          if block.is_a?(Proc) && block.arity == 0 && argument == Hash
+            self.new(block)
           end
         end
       end
