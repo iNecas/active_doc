@@ -83,8 +83,8 @@ module ActiveDoc
         def takes(name, *args, &block)
           ActiveDoc.described_method = nil
           Decorate.decorate do |klass, method_name|
-            decorator_name = :takes
-            wrapped_method_name = Decorate.create_alias(klass, method_name, decorator_name)
+            ActiveDoc.described_method ||= klass.instance_method(method_name)
+            method = ActiveDoc.described_method
             if args.size > 1 || !args.first.is_a?(Hash)
               argument_expectation = args.shift || nil
             else
@@ -98,12 +98,15 @@ module ActiveDoc
               description = ActiveDoc::Descriptions::MethodArgumentDescription.new(name, argument_expectation, caller.first, options, &block)
             end
             ActiveDoc.register_description(klass, method_name, description)
-            args_with_vals = {}
-            ActiveDoc.described_method ||= klass.instance_method(method_name)
-            method = ActiveDoc.described_method
+
+            decorator_name = :takes
+            wrapped_method_name = Decorate.create_alias(klass, method_name, decorator_name)
 
             klass.send(:define_method, method_name) do |*call_args, &call_block|
-              method.parameters.each_with_index { |(arg, name), i| args_with_vals[name] = {:val => call_args[i], :required => (arg != :opt), :defined => (i < call_args.size)}  }
+              args_with_vals = {}
+              method.parameters.each_with_index do |(arg, name), i|
+                args_with_vals[name] = {:val => call_args[i], :required => (arg != :opt), :defined => (i < call_args.size)}
+              end
               description.validate(args_with_vals)
               call = Decorate::AroundCall.new(self, method_name.to_sym, wrapped_method_name.to_sym, call_args, call_block)
               call.yield
