@@ -82,20 +82,10 @@ module ActiveDoc
         #  end
         def takes(name, *args, &block)
           ActiveDoc.description_target = nil
+
           Decorate.decorate do |klass, method_name|
             ActiveDoc.description_target ||= DescriptionTarget::Method.new(klass.instance_method(method_name))
-            if args.size > 1 || !args.first.is_a?(Hash)
-              argument_expectation = args.shift || nil
-            else
-              argument_expectation = nil
-            end
-            options = args.pop || {}
-
-            if ref_string = options[:ref]
-              description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, ActiveDoc.description_target, ref_string, caller.first, options, &block)
-            else
-              description = ActiveDoc::Descriptions::ArgumentDescription.new(name, ActiveDoc.description_target, argument_expectation, caller.first, options, &block)
-            end
+            description = ArgumentDescription.build(ActiveDoc.description_target, name, *args, &block)
             ActiveDoc.register_description(klass, method_name, description)
 
             decorator_name = :takes
@@ -275,21 +265,8 @@ module ActiveDoc
         end
 
         def takes(name, *args, &block)
-          if args.size > 1 || !args.first.is_a?(Hash)
-            argument_expectation = args.shift || nil
-          else
-            argument_expectation = nil
-          end
-          options = args.pop || {}
-
           description_target = DescriptionTarget::Hash.new
-
-          if ref_string = options[:ref]
-            description = ActiveDoc::Descriptions::ArgumentDescription::Reference.new(name, description_target, ref_string, caller.first, options, &block)
-          else
-            description = ActiveDoc::Descriptions::ArgumentDescription.new(name, description_target, argument_expectation, caller.first, options, &block)
-          end
-          @hash_descriptions << description
+          @hash_descriptions << ArgumentDescription.build(description_target, name, *args, &block)
         end
 
         def condition?(value)
@@ -379,7 +356,22 @@ module ActiveDoc
       attr_accessor :conjunction
       include Traceable
 
-      def initialize(name, description_target, argument_expectation, origin, options = {}, &block)
+      def self.build(description_target, name, *args, &block)
+        if args.size > 1 || !args.first.is_a?(Hash)
+          argument_expectation = args.shift || nil
+        else
+          argument_expectation = nil
+        end
+        options = args.pop || {}
+
+        if ref_string = options[:ref]
+          ArgumentDescription::Reference.new(description_target, name, ref_string, caller.first, options, &block)
+        else
+          ArgumentDescription.new(description_target, name, argument_expectation, caller.first, options, &block)
+        end
+      end
+
+      def initialize(description_target, name, argument_expectation, origin, options = {}, &block)
         @name, @origin, @description = name, origin, options[:desc]
         @description_target = description_target
         @argument_expectations = []
@@ -439,7 +431,7 @@ module ActiveDoc
 
       class Reference < ArgumentDescription
         include Traceable
-        def initialize(name, description_target, ref_string, origin, options)
+        def initialize(description_target, name, ref_string, origin, options)
           @name = name
           @klass, @method = ref_string.split("#")
           @klass = Object.const_get(@klass)
