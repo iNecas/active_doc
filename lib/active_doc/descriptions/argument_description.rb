@@ -1,6 +1,7 @@
 module ActiveDoc
   module Descriptions
     class ArgumentDescription
+      include ActiveDoc
       module Dsl
         include ActiveDoc
 
@@ -209,10 +210,13 @@ module ActiveDoc
       end
 
       class RegexpArgumentExpectation < ArgumentExpectation
+
+        takes :argument, :duck => :match
         def initialize(argument)
           @regexp = argument
         end
 
+        takes :value, String
         def condition?(value)
           value =~ @regexp
         end
@@ -235,6 +239,8 @@ module ActiveDoc
       end
 
       class ArrayArgumentExpectation < ArgumentExpectation
+
+        takes :argument, Array
         def initialize(argument)
           @array = argument
         end
@@ -261,6 +267,8 @@ module ActiveDoc
       end
 
       class ComplexConditionArgumentExpectation < ArgumentExpectation
+
+        takes :argument, :duck => :call
         def initialize(argument)
           @proc = argument
         end
@@ -286,6 +294,8 @@ module ActiveDoc
       end
 
       class OptionsHashArgumentExpectation < ArgumentExpectation
+
+        takes :argument, :duck => :to_proc
         def initialize(argument)
           @proc = argument
           @hash_descriptions = []
@@ -341,6 +351,8 @@ module ActiveDoc
       end
 
       class DuckArgumentExpectation < ArgumentExpectation
+
+        takes(:argument) {|value| value.is_a?(Symbol) or (value.is_a?(Array) and (value.all? {|v| v.is_a? Symbol}))}
         def initialize(argument)
           @respond_to = argument
           @respond_to = [@respond_to] unless @respond_to.is_a? Array
@@ -400,6 +412,12 @@ module ActiveDoc
         end
       end
 
+      takes :description_target, [DescriptionTarget::Method, DescriptionTarget::Hash]
+      takes :name, Symbol
+      takes :options, Hash do
+        takes :duck, :ref => "ActiveDoc::Descriptions::ArgumentDescription::DuckArgumentExpectation#initialize"
+        takes :desc, String
+      end
       def initialize(description_target, name, argument_expectation, origin, options = {}, &block)
         @name, @origin, @description = name, origin, options[:desc]
         @description_target = description_target
@@ -466,10 +484,14 @@ module ActiveDoc
 
       class Reference < ArgumentDescription
         include Traceable
+
+        takes :ref_string, /^\S+#\S+$/
+        takes :options, :ref => "ActiveDoc::Descriptions::ArgumentDescription#initialize"
         def initialize(description_target, name, ref_string, origin, options)
           @name = name
           @klass, @method = ref_string.split("#")
-          @klass = Object.const_get(@klass)
+          names = @klass.split("::")
+          @klass = names.inject(Object) {|k, name| k.const_get(name) }
           @method = @method.to_sym
           @origin = origin
         end
