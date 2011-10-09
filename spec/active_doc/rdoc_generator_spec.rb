@@ -8,33 +8,61 @@ describe ActiveDoc::RdocGenerator do
     describe "nested arguments" do
       let :subject_class do
         class_with_active_doc do
+          takes :name, String
           takes :options, Hash do
             takes :conjunction, String
+            takes :upcase, [true,false]
+            takes :html_options, Hash do
+              takes :header, String
+            end
           end
-          def described_method(options); end
+          takes :force, [true,false]
+          def described_method(name, options, force); end
         end
       end
 
       it { should == <<-RDOC }
 # ==== Attributes:
+# * +name+ :: (String)
 # * +options+ :: (Hash):
 #   * +:conjunction+ :: (String)
+#   * +:upcase+ :: ([true, false])
+#   * +:html_options+ :: (Hash):
+#     * +:header+ :: (String)
+# * +force+ :: ([true, false])
       RDOC
     end
 
     describe "description" do
-      let :subject_class do
-        Class.new do
-          include ActiveDoc
-          takes :conjunction, :desc => "String between items when joining"
-          def described_method(conjunction); end
+      context "without attr expectation" do
+        let :subject_class do
+          Class.new do
+            include ActiveDoc
+            takes :conjunction, :desc => "String between items when joining"
+            def described_method(conjunction); end
+          end
         end
-      end
 
-      it { should == <<-RDOC }
+        it { should == <<-RDOC }
 # ==== Attributes:
 # * +conjunction+ :: String between items when joining
-      RDOC
+        RDOC
+      end
+
+      context "with attr expectation" do
+        let :subject_class do
+          Class.new do
+            include ActiveDoc
+            takes :conjunction, String, :desc => "String between items when joining"
+            def described_method(conjunction); end
+          end
+        end
+
+        it { should == <<-RDOC }
+# ==== Attributes:
+# * +conjunction+ :: (String) String between items when joining
+        RDOC
+      end
     end
 
     describe "type argument expectation" do
@@ -122,7 +150,7 @@ describe ActiveDoc::RdocGenerator do
     end
 
     it "writes generated rdoc to temporary file" do
-      pending "need to be rewritten - current state, when it affects the current file is not good"
+      pending "needs to be rewritten - current state, when it affects the current file is not good"
       ActiveDoc::RdocGenerator.write_rdoc(documented_class_path)
       documented_class = File.read(documented_class_path)
       documented_class.chomp.should == <<-RUBY.chomp

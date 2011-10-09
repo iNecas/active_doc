@@ -165,6 +165,9 @@ module ActiveDoc
           return nil
         end
 
+        def children
+          []
+        end
 
         def fulfilled?(value)
           if self.condition?(value)
@@ -174,16 +177,6 @@ module ActiveDoc
             @failed_value = value
             return false
           end
-        end
-
-        def to_rdoc
-          visitor = ActiveDoc::RdocGenerator::Visitor.new
-          visitor.visit(self)
-        end
-
-        # to be inserted after argument description in rdoc
-        def additional_rdoc
-          return nil
         end
       end
 
@@ -316,12 +309,8 @@ module ActiveDoc
           "contain described keys, got #{@failed_value.inspect}"
         end
 
-        def additional_rdoc
-          if @hash_descriptions
-            ret = @hash_descriptions.map { |x| "  #{x.to_rdoc(true)}" }.join("\n")
-            ret.insert(0, ":\n")
-            ret
-          end
+        def children
+          @hash_descriptions
         end
 
         def last_line
@@ -433,29 +422,11 @@ module ActiveDoc
         return @name
       end
 
-      def to_rdoc(hash = false)
-        visitor = ActiveDoc::RdocGenerator::Visitor.new
-        visitor.visit(self, hash)
-      end
-
       def last_line
         return @last_line || self.origin_line
       end
 
       private
-
-      def expectations_to_rdoc
-        expectations_rdocs = @argument_expectations.map { |x| x.to_rdoc }.compact
-        " :: (#{expectations_rdocs.join(", ")})" unless expectations_rdocs.empty?
-      end
-
-      def expectations_to_additional_rdoc
-        @argument_expectations.map { |argument_expectation| argument_expectation.additional_rdoc }.compact.join
-      end
-
-      def desc_to_rdoc
-        " :: #{@description}" if @description
-      end
 
       class Reference < ArgumentDescription
         include Traceable
@@ -474,10 +445,6 @@ module ActiveDoc
         def validate(*args)
           # we validate only in target method
           return @name
-        end
-
-        def to_rdoc(*args)
-            referenced_argument_description.to_rdoc
         end
 
         private
