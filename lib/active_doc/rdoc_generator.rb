@@ -4,6 +4,11 @@ module ActiveDoc
     class RdocVisitor
 
       class << self
+
+        # registers a visitor procedure for the given class.
+        # Procedure defined with the block will be evaluated in the context of
+        # the visited object and takes one argument - the visitor object
+        # itself - this allows cumulating the results in this visitor object.
         def register(klass, &block)
           @visitors ||= {}
           @visitors[klass] = block
