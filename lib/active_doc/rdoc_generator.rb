@@ -111,7 +111,6 @@ module ActiveDoc
       register ActiveDoc::DescribedMethod  do |rdoc|
         rdoc.new_line "==== Attributes:"
         descriptions.each {|x| rdoc.visit(x)}
-        rdoc.render
       end
     end
 
@@ -120,6 +119,7 @@ module ActiveDoc
       if documented_method = ActiveDoc.documented_method(base, method_name)
         rdoc_visitor = ActiveDoc::RdocGenerator::RdocVisitor.new
         rdoc_visitor.visit(documented_method)
+        rdoc_visitor.render
       end
     end
 
