@@ -1,4 +1,5 @@
 require 'spec_helper'
+
 class PhoneBook
   include ActiveDoc
   attr_accessor :owner
@@ -35,10 +36,14 @@ class PhoneBook
   end
 end
 
+
 describe ActiveDoc::Descriptions::ArgumentDescription do
+
   describe "more described methods" do
     subject { PhoneBook.new("Peter Smith") }
+
     context "instance method" do
+
       context "with wrong type" do
         it "raises ArgumentError" do
           lambda { subject.add(:catty_smith, "123456") }.should raise_error ArgumentError
@@ -67,9 +72,11 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
           lambda { subject.add(:catty_smith, "123456") }.should_not raise_error ArgumentError
         end
       end
+
     end
 
     context "class method" do
+
       context "with wrong type" do
         it "raises ArgumentError" do
           lambda { subject.class.find_for_owner(:peter_smith) }.should raise_error ArgumentError
@@ -87,6 +94,7 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
           lambda { subject.class.phone_books }.should_not raise_error ArgumentError
         end
       end
+
     end
   end
 
@@ -118,25 +126,21 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
 
     context "when described key is not specified" do
       subject { lambda { subject_class.new.join({})} }
-
       it { should_not raise_error ArgumentError }
     end
 
     context "when described key has wrong value" do
       subject { lambda { subject_class.new.join(:conjunction => 2)} }
-
       it { should raise_error ArgumentError }
     end
 
     context "when described key has valid value" do
       subject { lambda { subject_class.new.join(:conjunction => ",")} }
-
       it { should_not raise_error ArgumentError }
     end
 
     context "when undescribed key is given" do
       subject { lambda { subject_class.new.join(:last_conjunction => "and")} }
-
       it { should raise_error ArgumentError }
     end
 
@@ -153,7 +157,6 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
 
     describe "Validation" do
       subject { lambda { subject_class.new.join(";") } }
-
       it { should_not raise_error ArgumentError }
     end
 
@@ -170,16 +173,16 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
     describe "Validation" do
       context "for valid value" do
         subject { lambda { subject_class.new.join(";") } }
-
         it { should_not raise_error ArgumentError }
       end
 
       context "for invalid value" do
         subject { lambda { subject_class.new.join(1) } }
-
         it { should raise_error ArgumentError }
       end
+
     end
+
   end
 
   describe "regexp argument expectation" do
@@ -191,17 +194,17 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
     end
 
     describe "Validation" do
+
       context "for valid value" do
         subject { lambda { subject_class.new.join("and") } }
-
         it { should_not raise_error ArgumentError }
       end
 
       context "for invalid value" do
         subject { lambda { subject_class.new.join("xor") } }
-
         it { should raise_error ArgumentError }
       end
+
     end
   end
 
@@ -214,17 +217,17 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
     end
 
     describe "Validation" do
+
       context "for valid value" do
         subject { lambda { subject_class.new.join("and") } }
-
         it { should_not raise_error ArgumentError }
       end
 
       context "for invalid value" do
         subject { lambda { subject_class.new.join("xor") } }
-
         it { should raise_error ArgumentError }
       end
+
     end
   end
 
@@ -238,17 +241,17 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
     end
 
     describe "Validation" do
+
       context "for valid value" do
         subject { lambda { subject_class.new.divide(1) } }
-
         it { should_not raise_error ArgumentError }
       end
 
       context "for invalid value" do
         subject { lambda { subject_class.new.divide(0) } }
-
         it { should raise_error ArgumentError }
       end
+
     end
   end
 
@@ -262,20 +265,18 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
     end
 
     describe "Validation" do
+
       context "for valid value" do
         subject { lambda { subject_class.new.sum([1,2,3], 2) } }
-
         it { should_not raise_error ArgumentError }
       end
 
       context "for invalid value" do
         subject { lambda { subject_class.new.sum(:s1_2_3, 2) } }
-
         it { should raise_error ArgumentError }
       end
+
     end
   end
-
-
 end
 

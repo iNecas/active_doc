@@ -55,6 +55,7 @@ module ActiveDoc
       end
     end
 
+
     def self.for_method(base, method_name)
       if documented_method = ActiveDoc.documented_method(base, method_name)
         documented_method.to_rdoc
