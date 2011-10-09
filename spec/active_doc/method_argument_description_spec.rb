@@ -92,8 +92,7 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
 
   context "for description of optional parameter" do
     subject do
-      Class.new do
-        include ActiveDoc
+      class_with_active_doc do
         takes :conjunction, String
         def join(conjunction = ","); end
       end.new
@@ -179,8 +178,7 @@ RDOC
 
   describe "type argument expectation" do
     let :subject_class do
-      Class.new do
-        include ActiveDoc
+      class_with_active_doc do
         takes :conjunction, String
         def join(conjunction); end
       end
@@ -245,8 +243,7 @@ RDOC
 
   describe "array argument expectation" do
     let :subject_class do
-      Class.new do
-        include ActiveDoc
+      class_with_active_doc do
         takes :conjunction, %w{and or}
         def join(conjunction); end
       end
@@ -279,8 +276,7 @@ RDOC
 
   describe "complex condition argument expectation" do
     let :subject_class do
-      Class.new do
-        include ActiveDoc
+      class_with_active_doc do
         takes(:number){|value| value != 0 }
         def divide(number) ; end
       end
@@ -312,8 +308,7 @@ RDOC
 
   describe "duck typing argument expectation" do
     let :subject_class do
-      Class.new do
-        include ActiveDoc
+      class_with_active_doc do
         takes :collection, :duck => :each
         takes :count, :duck => [:succ, :pred]
         def sum(collection, count); end
