@@ -90,9 +90,12 @@ module ActiveDoc
           rdoc.new_line "* +#{name}+"
         end
         rdoc.separator= " :: "
+
         @argument_expectations.each { |x| rdoc.visit(x); rdoc.separator=", " }
+
         rdoc.separator=" " unless rdoc.separator == " :: "
         rdoc.append "#{@description}" unless @description.to_s.empty?
+
         @argument_expectations.each do |arg_expectations|
           rdoc.separator= ":"
           rdoc.shift_right
@@ -101,6 +104,7 @@ module ActiveDoc
           end
           rdoc.shift_left
         end
+
         rdoc.separator= nil
       end
 
