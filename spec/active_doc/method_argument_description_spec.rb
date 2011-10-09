@@ -140,15 +140,6 @@ describe ActiveDoc::Descriptions::ArgumentDescription do
       it { should raise_error ArgumentError }
     end
 
-    describe "Rdoc comment" do
-      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join) }
-
-      it { should == <<RDOC }
-# ==== Attributes:
-# * +options+ :: (Hash):
-#   * +:conjunction+ :: (String)
-RDOC
-    end
   end
 
   describe "none expectation specified" do
@@ -166,14 +157,6 @@ RDOC
       it { should_not raise_error ArgumentError }
     end
 
-    describe "Rdoc comment" do
-      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join)}
-
-      it { should == <<RDOC }
-# ==== Attributes:
-# * +conjunction+ :: String between items when joining
-RDOC
-    end
   end
 
   describe "type argument expectation" do
@@ -197,21 +180,11 @@ RDOC
         it { should raise_error ArgumentError }
       end
     end
-
-    describe "Rdoc comment" do
-      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join)}
-
-      it { should == <<RDOC }
-# ==== Attributes:
-# * +conjunction+ :: (String)
-RDOC
-    end
   end
 
   describe "regexp argument expectation" do
     let :subject_class do
-      Class.new do
-        include ActiveDoc
+      class_with_active_doc do
         takes :conjunction, /^(and|or)$/
         def join(conjunction) ; end
       end
@@ -229,15 +202,6 @@ RDOC
 
         it { should raise_error ArgumentError }
       end
-    end
-
-    describe "Rdoc comment" do
-      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join) }
-
-      it { should == <<RDOC }
-# ==== Attributes:
-# * +conjunction+ :: (/^(and|or)$/)
-RDOC
     end
   end
 
@@ -261,15 +225,6 @@ RDOC
 
         it { should raise_error ArgumentError }
       end
-    end
-
-    describe "Rdoc comment" do
-      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :join) }
-
-      it { should == <<RDOC }
-# ==== Attributes:
-# * +conjunction+ :: (["and", "or"])
-RDOC
     end
   end
 
@@ -295,15 +250,6 @@ RDOC
         it { should raise_error ArgumentError }
       end
     end
-
-    describe "Rdoc comment" do
-      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :divide) }
-
-      it { should == <<RDOC }
-# ==== Attributes:
-# * +number+ :: (Complex Condition)
-RDOC
-    end
   end
 
   describe "duck typing argument expectation" do
@@ -327,16 +273,6 @@ RDOC
 
         it { should raise_error ArgumentError }
       end
-    end
-
-    describe "Rdoc comment" do
-      subject { ActiveDoc::RdocGenerator.for_method(subject_class, :sum) }
-
-      it { should == <<RDOC }
-# ==== Attributes:
-# * +collection+ :: (respond to :each)
-# * +count+ :: (respond to [:succ, :pred])
-RDOC
     end
   end
 
