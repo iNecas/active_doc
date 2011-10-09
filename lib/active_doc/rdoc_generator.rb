@@ -1,7 +1,7 @@
 module ActiveDoc
   class RdocGenerator
 
-    class Visitor
+    class RdocVisitor
 
       class << self
         def register(klass, &block)
@@ -51,66 +51,66 @@ module ActiveDoc
         out
       end
 
-      register Descriptions::ArgumentDescription::TypeArgumentExpectation do |visitor|
-        visitor.append "(#{@type.name})"
+      register Descriptions::ArgumentDescription::TypeArgumentExpectation do |rdoc|
+        rdoc.append "(#{@type.name})"
       end
 
-      register Descriptions::ArgumentDescription::RegexpArgumentExpectation do |visitor|
+      register Descriptions::ArgumentDescription::RegexpArgumentExpectation do |rdoc|
         regexp_str = @regexp.inspect.gsub('\\') { '\\\\' }
-        visitor.append "(#{regexp_str})"
+        rdoc.append "(#{regexp_str})"
       end
 
-      register Descriptions::ArgumentDescription::ArrayArgumentExpectation do |visitor|
-        visitor.append "(#{@array.inspect})"
+      register Descriptions::ArgumentDescription::ArrayArgumentExpectation do |rdoc|
+        rdoc.append "(#{@array.inspect})"
       end
 
-      register Descriptions::ArgumentDescription::ComplexConditionArgumentExpectation do |visitor|
-        visitor.append "(#{"Complex Condition"})"
+      register Descriptions::ArgumentDescription::ComplexConditionArgumentExpectation do |rdoc|
+        rdoc.append "(#{"Complex Condition"})"
       end
 
-      register Descriptions::ArgumentDescription::OptionsHashArgumentExpectation do |visitor|
-        visitor.append "(#{"Hash"})"
+      register Descriptions::ArgumentDescription::OptionsHashArgumentExpectation do |rdoc|
+        rdoc.append "(#{"Hash"})"
       end
 
-      register Descriptions::ArgumentDescription::DuckArgumentExpectation do |visitor|
+      register Descriptions::ArgumentDescription::DuckArgumentExpectation do |rdoc|
         respond_to = @respond_to
         respond_to = respond_to.first if respond_to.size == 1
-        visitor.append "(respond to #{respond_to.inspect})"
+        rdoc.append "(respond to #{respond_to.inspect})"
       end
 
-      register Descriptions::ArgumentDescription do |visitor|
+      register Descriptions::ArgumentDescription do |rdoc|
         if @description_target.is_a? Descriptions::ArgumentDescription::DescriptionTarget::Hash
-          visitor.new_line "* +:#{name}+"
+          rdoc.new_line "* +:#{name}+"
         else
-          visitor.new_line "* +#{name}+"
+          rdoc.new_line "* +#{name}+"
         end
-        visitor.separator= " :: "
-        @argument_expectations.each { |x| visitor.visit(x); visitor.separator=", " }
-        visitor.separator=" " unless visitor.separator == " :: "
-        visitor.append "#{@description}" unless @description.to_s.empty?
+        rdoc.separator= " :: "
+        @argument_expectations.each { |x| rdoc.visit(x); rdoc.separator=", " }
+        rdoc.separator=" " unless rdoc.separator == " :: "
+        rdoc.append "#{@description}" unless @description.to_s.empty?
         @argument_expectations.each do |arg_expectations|
-          visitor.separator= ":"
-          visitor.shift_right
+          rdoc.separator= ":"
+          rdoc.shift_right
           arg_expectations.children.each do |child|
-            visitor.visit(child)
+            rdoc.visit(child)
           end
-          visitor.shift_left
+          rdoc.shift_left
         end
-        visitor.separator= nil
+        rdoc.separator= nil
       end
 
-      register ActiveDoc::DescribedMethod  do |visitor|
-        visitor.new_line "==== Attributes:"
-        descriptions.each {|x| visitor.visit(x)}
-        visitor.render
+      register ActiveDoc::DescribedMethod  do |rdoc|
+        rdoc.new_line "==== Attributes:"
+        descriptions.each {|x| rdoc.visit(x)}
+        rdoc.render
       end
     end
 
 
     def self.for_method(base, method_name)
       if documented_method = ActiveDoc.documented_method(base, method_name)
-        visitor = ActiveDoc::RdocGenerator::Visitor.new
-        visitor.visit(documented_method)
+        rdoc_visitor = ActiveDoc::RdocGenerator::RdocVisitor.new
+        rdoc_visitor.visit(documented_method)
       end
     end
 
