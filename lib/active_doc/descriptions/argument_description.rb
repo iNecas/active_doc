@@ -176,6 +176,11 @@ module ActiveDoc
           end
         end
 
+        def to_rdoc
+          visitor = ActiveDoc::RdocGenerator::Visitor.new
+          visitor.visit(self)
+        end
+
         # to be inserted after argument description in rdoc
         def additional_rdoc
           return nil
@@ -196,10 +201,6 @@ module ActiveDoc
         # Expected to...
         def expectation_fail_to_s
           "be #{@type.name}, got #{@failed_value.class.name}"
-        end
-
-        def to_rdoc
-          @type.name
         end
 
         def self.from(argument, options, proc)
@@ -227,10 +228,6 @@ module ActiveDoc
           "match #{@regexp}, got '#{@failed_value.inspect}'"
         end
 
-        def to_rdoc
-          @regexp.inspect.gsub('\\') { '\\\\' }
-        end
-
         def self.from(argument, options, proc)
           if argument.is_a? Regexp
             self.new(argument)
@@ -255,10 +252,6 @@ module ActiveDoc
           "be included in #{@array.inspect}, got #{@failed_value.inspect}"
         end
 
-        def to_rdoc
-          @array.inspect
-        end
-
         def self.from(argument, options, proc)
           if argument.is_a? Array
             self.new(argument)
@@ -280,10 +273,6 @@ module ActiveDoc
         # Expected to...
         def expectation_fail_to_s
           "satisfy given condition, got #{@failed_value.inspect}"
-        end
-
-        def to_rdoc
-          "Complex Condition"
         end
 
         def self.from(argument, options, proc)
@@ -327,10 +316,6 @@ module ActiveDoc
           "contain described keys, got #{@failed_value.inspect}"
         end
 
-        def to_rdoc
-          return "Hash"
-        end
-
         def additional_rdoc
           if @hash_descriptions
             ret = @hash_descriptions.map { |x| "  #{x.to_rdoc(true)}" }.join("\n")
@@ -367,12 +352,6 @@ module ActiveDoc
         # NOTE: Possible thread-safe problem
         def expectation_fail_to_s
           "be respond to #{@respond_to.inspect}, missing #{@failed_quacks.inspect}"
-        end
-
-        def to_rdoc
-          respond_to = @respond_to
-          respond_to = respond_to.first if respond_to.size == 1
-          "respond to #{respond_to.inspect}"
         end
 
         def self.from(argument, options, proc)
@@ -455,12 +434,8 @@ module ActiveDoc
       end
 
       def to_rdoc(hash = false)
-        name = hash ? @name.inspect : @name
-        ret = "* +#{name}+"
-        ret << expectations_to_rdoc.to_s
-        ret << desc_to_rdoc.to_s
-        ret << expectations_to_additional_rdoc.to_s
-        return ret
+        visitor = ActiveDoc::RdocGenerator::Visitor.new
+        visitor.visit(self, hash)
       end
 
       def last_line
