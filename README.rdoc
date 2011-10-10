@@ -165,7 +165,8 @@ When passing proc taking an argument, this proc is used to validate value of thi
 <b> 
 This version was tested on and should be compatible with Ruby 1.9.2.
 It uses some features introduced in Ruby 1.9.
-Compatibility with 1.8.7 to be fixed in future releases.
+It's not compatible with 1.8.7 and since 1.8.7 starts being legacy there isn't
+plan to support it unless you implement it.
 </b>
 
 === Usage Notice
@@ -175,29 +176,12 @@ Bear in mind: This gem is in early-stages of development and was not sufficientl
 
 === Road Map
 
-* Support for 1.8.7
 * Combine argument expectations with AND and OR conjunctions
 * More types of descriptions (for modules, mixins...)
 
 === Contribution
 
-Every bug report, bug fix, feature request or already implemented feature is welcome.
-
-To report a bug or request a feature, create an issue in Github.
-
-When contributing, please follow following instructions:
-
-* Write spec for your contribution. It ensures everything works in future.
-* Do not bother with Rakefile, version or history. It's OK to have your own, but if so, keep it in separated commit 
-to be easily ignored, when pulling.
-* Bonus points for topic branch.
-
-<b>
-NOTICE: I am quite new to open source development, so I appreciate every input from more experienced contributor.
-Contact me on e-mail.
-</b>
-
-
+Welcome
 
 
 == Copyright
