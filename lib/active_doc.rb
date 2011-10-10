@@ -56,13 +56,10 @@ module ActiveDoc
       Thread.current[:active_doc_description_target] = description_target
     end
 
-    def prepare_descriptions
-      @descriptions ||= Hash.new {|h, (klass, method_name)| h[[klass, method_name]] = ActiveDoc::DescribedMethod.new(klass, method_name, caller[3]) }
-    end
-
-    def register_description(klass, method_name, description)
-      prepare_descriptions
-      @descriptions[[klass, method_name]].descriptions.insert(0,description)
+    def register_description(method, description)
+      @descriptions ||= {}
+      @descriptions[[method.owner, method.name]] ||= ActiveDoc::DescribedMethod.new(method)
+      @descriptions[[method.owner, method.name]].descriptions.insert(0,description)
     end
 
     def documented_method(base, method_name)

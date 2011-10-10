@@ -97,7 +97,7 @@ module ActiveDoc
           Decorate.decorate do |klass, method_name|
             ActiveDoc.description_target ||= DescriptionTarget::Method.new(klass.instance_method(method_name))
             description = ArgumentDescription.build(ActiveDoc.description_target, name, *args, &block)
-            ActiveDoc.register_description(klass, method_name, description)
+            ActiveDoc.register_description(ActiveDoc.description_target.method, description)
 
             decorator_name = :takes
             wrapped_method_name = Decorate.create_alias(klass, method_name, decorator_name)
@@ -115,6 +115,8 @@ module ActiveDoc
 
         class Method
           include ActiveDoc
+
+          attr_reader :method
           takes :method, UnboundMethod
           def initialize(method)
             @method = method

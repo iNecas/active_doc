@@ -107,6 +107,9 @@ module ActiveDoc
 
         rdoc.separator= nil
       end
+      register Descriptions::ArgumentDescription::Reference do |rdoc|
+        rdoc.visit(referenced_argument_description)
+      end
 
       register ActiveDoc::DescribedMethod  do |rdoc|
         rdoc.new_line "==== Attributes:"
@@ -115,24 +118,20 @@ module ActiveDoc
     end
 
 
-    def self.for_method(base, method_name)
-      if documented_method = ActiveDoc.documented_method(base, method_name)
-        rdoc_visitor = ActiveDoc::RdocGenerator::RdocVisitor.new
-        rdoc_visitor.visit(documented_method)
-        rdoc_visitor.render
-      end
+    def self.for_method(documented_method)
+      rdoc_visitor = ActiveDoc::RdocGenerator::RdocVisitor.new
+      rdoc_visitor.visit(documented_method)
+      rdoc_visitor.render
     end
 
-    def self.write_rdoc(source_file_path = nil)
-      files_and_methods = ActiveDoc.documented_methods.sort_by { |x| x.origin_line }.group_by { |x| x.origin_file }
-      files_and_methods.delete_if { |file| file != source_file_path } if source_file_path
-      files_and_methods.each do |origin_file, documented_methods|
-        offset = 0
-        yield origin_file, documented_methods if block_given?
-        documented_methods.each do |documented_method|
-          offset = documented_method.write_rdoc(offset)
-        end
+    def self.write_rdoc(source_file_path, output_file_path)
+      files_and_methods = ActiveDoc.documented_methods.sort_by { |x| x.line }.reverse.group_by(&:file)
+      lines = File.read(source_file_path).lines.to_a
+      files_and_methods[source_file_path].each do |documented_method|
+        rdoc = RdocGenerator.for_method(documented_method)
+        lines.insert(documented_method.line-1, *rdoc.lines.to_a)
       end
+      File.open(output_file_path, "w") {|f| lines.each {|l| f << l} }
     end
   end
 end

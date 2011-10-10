@@ -3,7 +3,10 @@ require 'spec_helper'
 describe ActiveDoc::RdocGenerator do
 
   describe "rdoc output for descriptions" do
-    subject { ActiveDoc::RdocGenerator.for_method(subject_class, :described_method) }
+    subject do
+      documented_method = ActiveDoc.documented_method(subject_class, :described_method)
+      ActiveDoc::RdocGenerator.for_method(documented_method)
+    end
 
     describe "nested arguments" do
       let :subject_class do
@@ -140,9 +143,13 @@ describe ActiveDoc::RdocGenerator do
 
   describe "saving the whole documentation" do
     let(:documented_class_path) { File.expand_path("../../support/documented_class.rb", __FILE__) }
-    before(:each) do
+    let(:output_class_path) { File.expand_path("../../support/documented_class_with_rdoc.rb", __FILE__) }
+    before do
       @original_documented_class = File.read(documented_class_path)
       load documented_class_path
+    end
+    after do
+      File.delete(output_class_path) if File.exists? output_class_path
     end
 
     after(:each) do
@@ -150,9 +157,8 @@ describe ActiveDoc::RdocGenerator do
     end
 
     it "writes generated rdoc to temporary file" do
-      pending "needs to be rewritten - current state, when it affects the current file is not good"
-      ActiveDoc::RdocGenerator.write_rdoc(documented_class_path)
-      documented_class = File.read(documented_class_path)
+      ActiveDoc::RdocGenerator.write_rdoc(documented_class_path, output_class_path)
+      documented_class = File.read(output_class_path)
       documented_class.chomp.should == <<-RUBY.chomp
 class PhoneNumber
   include ActiveDoc
@@ -162,11 +168,12 @@ class PhoneNumber
   takes :options, Hash do
     takes :category, String, :desc => "Category of this contact"
   end
+
 # ==== Attributes:
-# * +contact_name+ :: (String) :: Name of person
-# * +number+ :: (/^\\\\d+$/) :: Phone number
+# * +contact_name+ :: (String) Name of person
+# * +number+ :: (/^\\\\d+$/) Phone number
 # * +options+ :: (Hash):
-#   * +:category+ :: (String) :: Category of this contact
+#   * +:category+ :: (String) Category of this contact
   def initialize(contact_name, number, options = {})
 
   end
@@ -183,16 +190,18 @@ class PhoneBook
   takes :contact_name, :ref => "PhoneNumber#initialize"
   takes :number, :ref => "PhoneNumber#initialize"
   takes :options, :ref => "PhoneNumber#initialize"
+
 # ==== Attributes:
-# * +contact_name+ :: (String) :: Name of person
-# * +number+ :: (/^\\\\d+$/) :: Phone number
+# * +contact_name+ :: (String) Name of person
+# * +number+ :: (/^\\\\d+$/) Phone number
 # * +options+ :: (Hash):
-#   * +:category+ :: (String) :: Category of this contact
+#   * +:category+ :: (String) Category of this contact
   def add(contact_name, number, options = {})
     @numbers << PhoneNumber.new(contact_name, number, options)
   end
 
   takes :owner, String
+
 # ==== Attributes:
 # * +owner+ :: (String)
   def self.find_for_owner(owner)
@@ -201,6 +210,7 @@ class PhoneBook
 
   class << self
     takes :phone_book, PhoneBook
+
 # ==== Attributes:
 # * +phone_book+ :: (PhoneBook)
     def register(phone_book)
