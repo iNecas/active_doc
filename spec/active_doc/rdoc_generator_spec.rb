@@ -160,7 +160,7 @@ describe ActiveDoc::RdocGenerator do
       ActiveDoc::RdocGenerator.write_rdoc(documented_class_path, output_class_path)
       documented_class = File.read(output_class_path)
       documented_class.chomp.should == <<-RUBY.chomp
-class PhoneNumber
+class DocumentedPhoneNumber
   include ActiveDoc
 
   takes :contact_name, String, :desc => "Name of person"
@@ -178,18 +178,18 @@ class PhoneNumber
 
   end
 end
-class PhoneBook
+class DocumentedPhoneBook
   include ActiveDoc
   attr_accessor :owner
 
   def initialize(owner)
     @numbers = []
-    PhoneBook.register(self)
+    DocumentedPhoneBook.register(self)
   end
 
-  takes :contact_name, :ref => "PhoneNumber#initialize"
-  takes :number, :ref => "PhoneNumber#initialize"
-  takes :options, :ref => "PhoneNumber#initialize"
+  takes :contact_name, :ref => "DocumentedPhoneNumber#initialize"
+  takes :number, :ref => "DocumentedPhoneNumber#initialize"
+  takes :options, :ref => "DocumentedPhoneNumber#initialize"
 
 # ==== Attributes:
 # * +contact_name+ :: (String) Name of person
@@ -197,7 +197,7 @@ class PhoneBook
 # * +options+ :: (Hash):
 #   * +:category+ :: (String) Category of this contact
   def add(contact_name, number, options = {})
-    @numbers << PhoneNumber.new(contact_name, number, options)
+    @numbers << DocumentedPhoneNumber.new(contact_name, number, options)
   end
 
   takes :owner, String
@@ -209,10 +209,10 @@ class PhoneBook
   end
 
   class << self
-    takes :phone_book, PhoneBook
+    takes :phone_book, DocumentedPhoneBook
 
 # ==== Attributes:
-# * +phone_book+ :: (PhoneBook)
+# * +phone_book+ :: (DocumentedPhoneBook)
     def register(phone_book)
       @phone_books ||= {}
       @phone_books[phone_book.owner] = phone_book

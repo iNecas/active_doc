@@ -1,4 +1,4 @@
-class PhoneNumber
+class DocumentedPhoneNumber
   include ActiveDoc
 
   takes :contact_name, String, :desc => "Name of person"
@@ -11,21 +11,21 @@ class PhoneNumber
 
   end
 end
-class PhoneBook
+class DocumentedPhoneBook
   include ActiveDoc
   attr_accessor :owner
 
   def initialize(owner)
     @numbers = []
-    PhoneBook.register(self)
+    DocumentedPhoneBook.register(self)
   end
 
-  takes :contact_name, :ref => "PhoneNumber#initialize"
-  takes :number, :ref => "PhoneNumber#initialize"
-  takes :options, :ref => "PhoneNumber#initialize"
+  takes :contact_name, :ref => "DocumentedPhoneNumber#initialize"
+  takes :number, :ref => "DocumentedPhoneNumber#initialize"
+  takes :options, :ref => "DocumentedPhoneNumber#initialize"
 
   def add(contact_name, number, options = {})
-    @numbers << PhoneNumber.new(contact_name, number, options)
+    @numbers << DocumentedPhoneNumber.new(contact_name, number, options)
   end
 
   takes :owner, String
@@ -35,7 +35,7 @@ class PhoneBook
   end
 
   class << self
-    takes :phone_book, PhoneBook
+    takes :phone_book, DocumentedPhoneBook
 
     def register(phone_book)
       @phone_books ||= {}
