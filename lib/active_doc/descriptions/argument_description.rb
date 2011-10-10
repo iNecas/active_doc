@@ -328,9 +328,9 @@ module ActiveDoc
 
       class DuckArgumentExpectation < ArgumentExpectation
 
-        takes(:argument) {|value| value.is_a?(Symbol) or (value.is_a?(Array) and (value.all? {|v| v.is_a? Symbol}))}
-        def initialize(argument)
-          @respond_to = argument
+        takes(:duck) {|value| value.is_a?(Symbol) or (value.is_a?(Array) and (value.all? {|v| v.is_a? Symbol}))}
+        def initialize(duck)
+          @respond_to = duck
           @respond_to = [@respond_to] unless @respond_to.is_a? Array
         end
 
@@ -457,7 +457,7 @@ module ActiveDoc
               return referenced_argument_description
             end
           end
-          raise "Missing referenced argument description '#{@klass.name}##{@method}'"
+          raise "Missing referenced argument description #{@name}: '#{@klass.name}##{@method}'"
         end
       end
 

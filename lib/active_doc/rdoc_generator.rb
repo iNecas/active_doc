@@ -1,3 +1,4 @@
+require 'fileutils'
 module ActiveDoc
   class RdocGenerator
 
@@ -131,7 +132,16 @@ module ActiveDoc
         rdoc = RdocGenerator.for_method(documented_method)
         lines.insert(documented_method.line-1, *rdoc.lines.to_a)
       end
+      FileUtils.mkdir_p(File.dirname(output_file_path))
       File.open(output_file_path, "w") {|f| lines.each {|l| f << l} }
+    end
+
+    def self.write_rdoc_for_dir(source_dir, output_dir)
+      source_files = ActiveDoc.documented_methods.map(&:file).uniq.select {|file| file.start_with? source_dir}
+      source_files.each do |source_file|
+        output_file = source_file.sub(source_dir, output_dir)
+        self.write_rdoc(source_file, output_file)
+      end
     end
   end
 end

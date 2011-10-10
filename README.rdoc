@@ -45,7 +45,9 @@ To use rake task, put something like this to your Rakefile
 
  require 'active_doc/rake/task'
 
- ActiveDoc::Rake::Task.new do 
+ in_dir = File.expand_path("../lib", __FILE__)
+ out_dir = File.expand_path("../active_doc_out", __FILE__)
+ ActiveDoc::Rake::Task.new(in_dir, out_dir) do
    # here you can put additional requirement files
    require File.expand_path("lib/phone_book.rb", File.dirname(__FILE__))
  end
